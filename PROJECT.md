@@ -81,9 +81,9 @@ Biomes may override palette but must keep **interactable colours consistent** ac
 
 ### Mode
 
-**Fixed-angle perspective camera** — NOT true orthographic. Perspective gives depth cues for cliffs, water, and character height while keeping an isometric *feel*.
+**Fixed-angle perspective camera** — NOT true orthographic. Perspective gives depth cues for cliffs, water, and character height while keeping a raised, head-on *feel*.
 
-This matches Pokémon 3D overworlds and Order of the Sinking Star: 3D models, locked camera angle, player cannot rotate the view in V1.
+This matches Pokémon 3D overworlds and Order of the Sinking Star: 3D models, locked camera, **axis-aligned** (map edges parallel to screen — not rotated 45° like classic RTS isometric).
 
 ### Coordinate system (Godot default)
 
@@ -103,11 +103,11 @@ Camera3D (child of CameraRig node):
   FOV:            35–45° (lower = more isometric feel; start at 40°)
 
   Rig rotation (fixed, never changed by player input):
-    Y rotation:   45°   (view from NE corner — classic isometric diagonal)
-    X rotation:  −50°   (elevated, looking down at the play field)
+    Y rotation:   0°    (axis-aligned — camera south, looking north; NOT 45° diagonal)
+    X rotation:  −42°   (elevated oblique — OOTS / Pokémon overworld feel)
 
   Rig offset from player target (local space, applied after rotation):
-    Distance:     ~18–24 units from target (adjust until ~14 tiles fit vertically)
+    Distance:     ~18 units from target (adjust until ~14 tiles fit vertically)
     Height bias:  target at player chest (Y ≈ 0.9 on a 0.8-tall character)
 
   Follow behaviour:

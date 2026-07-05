@@ -6,11 +6,13 @@ const VIEWPORT_WIDTH := 1920
 const VIEWPORT_HEIGHT := 1080
 const TARGET_FPS := 60
 
-# Camera (fixed isometric rig — tune here after playtesting)
-const CAMERA_FOV := 40.0
-const CAMERA_YAW := 45.0
-const CAMERA_PITCH := -50.0
-const CAMERA_DISTANCE := 20.0
+# Camera — axis-aligned oblique (OOTS / Pokémon style), NOT 45° diamond isometric.
+# Yaw 0 = camera sits south (+Z), player walks north toward top of screen.
+# Yaw 45 = classic diagonal isometric (old look); avoid unless you want RTS-style rotation.
+const CAMERA_FOV := 38.0
+const CAMERA_YAW := 0.0
+const CAMERA_PITCH := -42.0
+const CAMERA_DISTANCE := 18.0
 const CAMERA_CHEST_HEIGHT := 0.9
 const CAMERA_FOLLOW_SPEED := 8.0
 
