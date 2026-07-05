@@ -56,11 +56,7 @@ func _build_ground_tiles() -> void:
 			var tile := MeshInstance3D.new()
 			tile.mesh = tile_mesh
 			tile.set_surface_override_material(0, ground_mat)
-			tile.position = Vector3(
-				float(x) + 0.5,
-				-0.05,
-				float(z) + 0.5,
-			)
+			tile.position = CollisionGrid.cell_center_3d(Vector2i(x, z), Config.GRID_CELL, -0.05)
 			_ground_root.add_child(tile)
 
 
@@ -85,7 +81,7 @@ func _add_wall(mesh: BoxMesh, mat: StandardMaterial3D, x: int, z: int) -> void:
 	var wall := MeshInstance3D.new()
 	wall.mesh = mesh
 	wall.set_surface_override_material(0, mat)
-	wall.position = Vector3(float(x) + 0.5, 0.45, float(z) + 0.5)
+	wall.position = CollisionGrid.cell_center_3d(Vector2i(x, z), Config.GRID_CELL, 0.45)
 	_ground_root.add_child(wall)
 
 
@@ -99,10 +95,10 @@ func _build_trees() -> void:
 	leaf_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	leaf_mat.albedo_color = Color("#5A9E5A")
 
-	for pos in [Vector3(4, 0, 5), Vector3(15, 0, 11), Vector3(7, 0, 12)]:
-		_add_tree(decor, pos, trunk_mat, leaf_mat)
+	for pos in [Vector2i(4, 5), Vector2i(15, 11), Vector2i(7, 12)]:
+		_add_tree(decor, CollisionGrid.cell_center_3d(pos), trunk_mat, leaf_mat)
 
-	_add_rock(decor, Vector3(12, 0, 6))
+	_add_rock(decor, Vector2i(12, 6))
 
 
 func _add_tree(
@@ -135,13 +131,14 @@ func _add_tree(
 	tree.add_child(leaves)
 
 
-func _add_rock(parent: Node3D, pos: Vector3) -> void:
+func _add_rock(parent: Node3D, cell: Vector2i) -> void:
 	var rock := MeshInstance3D.new()
 	var rock_mesh := SphereMesh.new()
 	rock_mesh.radius = 0.35
 	rock_mesh.height = 0.5
 	rock.mesh = rock_mesh
-	rock.position = Vector3(pos.x + 0.5, 0.2, pos.z + 0.5)
+	var center := CollisionGrid.cell_center_3d(cell)
+	rock.position = Vector3(center.x, 0.2, center.z)
 
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

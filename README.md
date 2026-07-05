@@ -19,12 +19,19 @@ bash scripts/run_smoke_test.sh
 
 ## Controls
 
-| Key | Action |
-|-----|--------|
+| Input | Action |
+|-------|--------|
 | WASD / Arrows | Move |
-| E / Space | Talk / advance dialogue |
-| H | Toggle collision debug overlay |
-| Esc | Pause (M6+) |
+| Left stick / D-pad | Move (gamepad) |
+| E / Space / **A** | Talk / advance dialogue |
+| Esc / **Start** | Pause menu |
+| M / **Select (−)** | Toggle minimap |
+| H | Toggle debug HUD (colliders, stats) |
+| R | Restart area *(debug HUD on)* |
+| C | Spawn companion *(debug HUD on, max 8)* |
+| L | Reload current area *(debug HUD on)* |
+
+Connect an **8BitDo SN30 Pro** (or any pad) via Bluetooth/USB — movement uses the left stick with a dead zone; face buttons match Xbox layout (A = confirm, Start = pause).
 
 ## Try M4
 

@@ -9,3 +9,7 @@ signal puzzle_solved(puzzle_id: String)
 signal area_entered(area_id: String)
 signal cat_found(cat_id: String)
 signal combat_hit(attacker_id: int, target_id: int)
+signal collision_debug_toggled(show_it: bool)
+signal debug_restart_requested
+signal debug_reload_area_requested
+signal debug_spawn_companion_requested

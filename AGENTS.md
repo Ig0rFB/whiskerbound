@@ -6,6 +6,7 @@ Read `PROJECT.md` before writing code. Implement milestones **in order** (M4 don
 
 - Godot 4, GDScript
 - Keep `core/` free of Node dependencies — no autoload references in `class_name` scripts
+- Group pure logic by domain (`movement/`, `companion/`, `world/`, etc.)
 - Placeholder primitives until real art
 - British spelling in comments and user-facing strings
 

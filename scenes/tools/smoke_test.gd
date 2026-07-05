@@ -3,12 +3,12 @@ extends SceneTree
 
 const FEET_COLLIDER := Rect2(-0.25, -0.25, 0.5, 0.5)
 const COMPANION_COLLIDER := Rect2(-0.2, -0.2, 0.4, 0.4)
-const MovementLogic := preload("res://core/movement.gd")
-const GridPathfindingLogic := preload("res://core/pathfinding.gd")
-const CompanionLogicScript := preload("res://core/companion_logic.gd")
-const CompanionDataScript := preload("res://core/companion_data.gd")
-const DialogueDataScript := preload("res://core/dialogue_data.gd")
-const InteractionLogicScript := preload("res://core/interaction.gd")
+const MovementLogic := preload("res://core/movement/movement.gd")
+const GridPathfindingLogic := preload("res://core/pathfinding/pathfinding.gd")
+const CompanionLogicScript := preload("res://core/companion/companion_logic.gd")
+const CompanionDataScript := preload("res://core/companion/companion_data.gd")
+const DialogueDataScript := preload("res://core/dialogue/dialogue_data.gd")
+const InteractionLogicScript := preload("res://core/interaction/interaction.gd")
 
 
 func _initialize() -> void:
@@ -125,6 +125,7 @@ func _test_companion_follow(astar, grid) -> void:
 		comp_feet = CompanionLogicScript.update(
 			comp_feet,
 			player_feet,
+			Vector2.ZERO,
 			data,
 			grid,
 			astar,
@@ -142,6 +143,64 @@ func _test_companion_follow(astar, grid) -> void:
 	if comp_feet.distance_to(player_feet) > follow_dist + 0.5:
 		push_error("Expected companion to finish within follow distance of player")
 		quit(1)
+
+	_test_companion_follow_while_player_moves(grid, astar)
+
+
+func _test_companion_follow_while_player_moves(grid, astar) -> void:
+	var data = CompanionDataScript.new()
+	var comp_feet := Vector2(8.0, 8.0)
+	var player_feet := Vector2(10.0, 8.0)
+	var player_velocity := Vector2(1.0, 0.0) * 4.5
+	var start_comp := comp_feet
+
+	for _i in 20:
+		player_feet += player_velocity * 0.1
+		comp_feet = CompanionLogicScript.update(
+			comp_feet,
+			player_feet,
+			player_velocity,
+			data,
+			grid,
+			astar,
+			COMPANION_COLLIDER,
+			0,
+			0.1,
+		)
+
+	if comp_feet.distance_to(start_comp) < 0.05:
+		push_error("Expected companion to move while player is walking")
+		quit(1)
+
+	_test_companion_moves_when_ahead_of_player(grid, astar)
+
+
+func _test_companion_moves_when_ahead_of_player(grid, astar) -> void:
+	var data = CompanionDataScript.new()
+	var comp_feet := Vector2(11.0, 8.0)
+	var player_feet := Vector2(10.0, 8.0)
+	var player_velocity := Vector2(1.0, 0.0) * 4.5
+	var start_comp := comp_feet
+
+	for _i in 15:
+		player_feet += player_velocity * 0.1
+		var before := comp_feet
+		comp_feet = CompanionLogicScript.update(
+			comp_feet,
+			player_feet,
+			player_velocity,
+			data,
+			grid,
+			astar,
+			COMPANION_COLLIDER,
+			0,
+			0.1,
+		)
+		if comp_feet.distance_to(before) > 0.001:
+			return
+
+	push_error("Expected companion to move every frame while player walks, even when starting ahead")
+	quit(1)
 
 
 func _test_dialogue_data() -> void:

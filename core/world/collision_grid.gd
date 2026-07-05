@@ -10,6 +10,29 @@ var cell_size: float = 1.0
 var _solid: PackedByteArray = PackedByteArray()
 
 
+static func world_to_cell(world_pos: Vector2, cell_size: float = 1.0) -> Vector2i:
+	return Vector2i(
+		int(floorf(world_pos.x / cell_size)),
+		int(floorf(world_pos.y / cell_size)),
+	)
+
+
+static func cell_center_x(cell_x: int, cell_size: float = 1.0) -> float:
+	return float(cell_x) * cell_size + cell_size * 0.5
+
+
+static func cell_center_z(cell_z: int, cell_size: float = 1.0) -> float:
+	return float(cell_z) * cell_size + cell_size * 0.5
+
+
+static func cell_center(cell: Vector2i, cell_size: float = 1.0) -> Vector2:
+	return Vector2(cell_center_x(cell.x, cell_size), cell_center_z(cell.y, cell_size))
+
+
+static func cell_center_3d(cell: Vector2i, cell_size: float = 1.0, y: float = 0.0) -> Vector3:
+	return Vector3(cell_center_x(cell.x, cell_size), y, cell_center_z(cell.y, cell_size))
+
+
 func configure(grid_width: int, grid_height: int, grid_cell_size: float = 1.0) -> void:
 	width = grid_width
 	height = grid_height
@@ -31,6 +54,12 @@ func is_cell_solid(cell_x: int, cell_z: int) -> bool:
 	if _solid.is_empty():
 		return false
 	return _solid[cell_z * width + cell_x] != 0
+
+
+## True when the feet centre sits inside a solid cell (recovery check — not footprint overlap).
+func center_cell_blocked(feet_x: float, feet_z: float) -> bool:
+	var cell := world_to_cell(Vector2(feet_x, feet_z), cell_size)
+	return is_cell_solid(cell.x, cell.y)
 
 
 func _collision_sample_inset(collider: Rect2) -> float:

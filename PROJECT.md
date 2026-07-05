@@ -289,28 +289,19 @@ whiskerbound/
 │   ├── game_state.gd
 │   ├── events.gd
 │   └── scene_flow.gd            # area transitions, fade
-├── core/
-│   ├── types.gd                 # Vec2 (xz), Rect, Direction8, enums
-│   ├── world.gd                 # collision grid, spatial queries
-│   ├── entity_store.gd
-│   ├── movement.gd              # velocity, wall slide, facing
-│   ├── pathfinding.gd           # AStarGrid2D wrapper (XZ plane)
-│   ├── companion.gd
-│   ├── interaction.gd
-│   ├── puzzle.gd
-│   ├── transition.gd
-│   ├── dialogue_data.gd
-│   ├── combat.gd                # minimal V1
-│   └── systems/
-│       ├── movement_system.gd
-│       ├── companion_system.gd
-│       ├── interaction_system.gd
-│       ├── puzzle_system.gd
-│       ├── transition_system.gd
-│       ├── animation_system.gd
-│       └── combat_system.gd
+├── core/                        # pure logic — no Node, no autoload refs
+│   ├── types.gd                 # Direction8, shared enums
+│   ├── movement/                # velocity, wall slide, player collider
+│   ├── world/                   # collision grid
+│   ├── pathfinding/             # AStarGrid2D wrapper (XZ plane)
+│   ├── companion/               # follow AI, data, collider
+│   ├── interaction/             # NPC proximity
+│   ├── dialogue/                # line tables
+│   ├── render/                  # depth sort helpers
+│   └── ui/                      # minimap coordinate math
 ├── input/
-│   └── input_actions.gd         # maps InputMap → Action enum
+│   ├── input_actions.gd         # keyboard + gamepad → actions each frame
+│   └── gamepad.gd               # stick deadzone, D-pad, button edges
 ├── scenes/
 │   ├── main.tscn
 │   ├── camera/

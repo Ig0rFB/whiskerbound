@@ -13,6 +13,9 @@ const CAMERA_FOV := 38.0
 const CAMERA_YAW := 0.0
 const CAMERA_PITCH := -42.0
 const CAMERA_DISTANCE := 18.0
+const CAMERA_DISTANCE_MIN := 12.0
+const CAMERA_DISTANCE_MAX := 26.0
+const CAMERA_ZOOM_STEP := 1.5
 const CAMERA_CHEST_HEIGHT := 0.9
 const CAMERA_FOLLOW_SPEED := 8.0
 
@@ -27,6 +30,8 @@ const PLAYER_CAPSULE_HEIGHT := 0.7
 const COMPANION_SPEED := 3.0
 const COMPANION_REPATH_INTERVAL := 0.5
 const COMPANION_STUCK_SECONDS := 2.0
+const COMPANION_PREDICT_SECONDS := 0.35
+const COMPANION_SLOT_LATERAL := 0.4
 
 # Placeholder colours (PROJECT.md §14)
 const COLOR_GROUND := Color("#7CB87C")
@@ -36,3 +41,11 @@ const COLOR_COMPANION := Color("#F5E6C8")
 const COLOR_NPC := Color("#9B8FA8")
 const COLOR_SKY := Color("#A8D8F0")
 const COLOR_COLLISION_DEBUG := Color(1.0, 0.2, 0.2, 0.35)
+
+# UI / debug (PROJECT.md §12)
+const DEBUG_MAX_COMPANIONS := 8
+const MINIMAP_PANEL_SIZE := 168
+const MINIMAP_MARGIN := 16
+
+# Gamepad (PROJECT.md §11 — SN30 Pro / generic)
+const GAMEPAD_DEADZONE := 0.2

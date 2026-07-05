@@ -10,8 +10,10 @@ var _slot: int = 0
 
 func setup(slot: int, spawn_feet: Vector2) -> void:
 	_slot = slot
+	process_priority = 1
 	global_position = Vector3(spawn_feet.x, 0.0, spawn_feet.y)
 	_data = CompanionData.new()
+	_data.configure_slot(slot)
 	_data.last_progress_pos = spawn_feet
 
 
@@ -26,10 +28,14 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
+	var player_velocity: Vector2 = player.feet_velocity
+	if player_velocity.length_squared() < 0.01:
+		player_velocity = InputActions.move_vector * Config.PLAYER_SPEED
 	var feet := Vector2(global_position.x, global_position.z)
 	feet = CompanionLogic.update(
 		feet,
 		player_feet,
+		player_velocity,
 		_data,
 		grid,
 		astar,
@@ -39,3 +45,15 @@ func _physics_process(delta: float) -> void:
 	)
 	global_position = Vector3(feet.x, 0.0, feet.y)
 	DepthSort.apply_to_mesh(_visual, 0.2, global_position.z)
+
+
+func get_debug_path() -> PackedVector2Array:
+	return _data.path
+
+
+func get_debug_path_index() -> int:
+	return _data.path_index
+
+
+func get_debug_slot() -> int:
+	return _slot

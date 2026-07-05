@@ -3,9 +3,25 @@ extends CanvasLayer
 
 @onready var _dialogue_box: Control = $DialogueBox
 @onready var _interact_prompt: Control = $InteractPrompt
+@onready var _minimap: Control = $Minimap
+@onready var _debug_hud: Control = $DebugHud
+@onready var _pause_menu: Control = $PauseMenu
+
+
+func _ready() -> void:
+	_pause_menu.resume_requested.connect(_on_pause_resume)
+	_pause_menu.quit_requested.connect(_on_pause_quit)
+	_layout_minimap()
 
 
 func _physics_process(_delta: float) -> void:
+	_handle_pause_input()
+	if GameState.mode == GameState.GameMode.PAUSE:
+		return
+
+	_handle_global_toggles()
+	_handle_debug_shortcuts()
+
 	match GameState.mode:
 		GameState.GameMode.GAMEPLAY:
 			_update_interact_prompt()
@@ -15,6 +31,65 @@ func _physics_process(_delta: float) -> void:
 			_interact_prompt.set_show_prompt(false)
 			if InputActions.interact_pressed:
 				_advance_dialogue()
+
+
+func _handle_pause_input() -> void:
+	if GameState.mode == GameState.GameMode.PAUSE:
+		if InputActions.pause_pressed or InputActions.interact_pressed:
+			_close_pause()
+		return
+
+	if InputActions.pause_pressed and GameState.mode == GameState.GameMode.GAMEPLAY:
+		_open_pause()
+
+
+func _handle_global_toggles() -> void:
+	if InputActions.toggle_minimap_pressed:
+		GameState.show_minimap = not GameState.show_minimap
+
+	if InputActions.toggle_debug_hud_pressed:
+		GameState.show_debug_hud = not GameState.show_debug_hud
+		GameState.show_collision_debug = GameState.show_debug_hud
+		Events.collision_debug_toggled.emit(GameState.show_collision_debug)
+
+
+func _handle_debug_shortcuts() -> void:
+	if not GameState.show_debug_hud or GameState.mode != GameState.GameMode.GAMEPLAY:
+		return
+
+	if InputActions.debug_restart_pressed:
+		Events.debug_restart_requested.emit()
+	if InputActions.debug_spawn_companion_pressed:
+		Events.debug_spawn_companion_requested.emit()
+	if InputActions.debug_reload_area_pressed:
+		Events.debug_reload_area_requested.emit()
+
+
+func _layout_minimap() -> void:
+	_minimap.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_minimap.offset_left = -(Config.MINIMAP_PANEL_SIZE + Config.MINIMAP_MARGIN + 4)
+	_minimap.offset_top = Config.MINIMAP_MARGIN
+	_minimap.offset_right = -Config.MINIMAP_MARGIN
+	_minimap.offset_bottom = Config.MINIMAP_MARGIN + Config.MINIMAP_PANEL_SIZE + 4
+
+
+func _open_pause() -> void:
+	GameState.mode = GameState.GameMode.PAUSE
+	_pause_menu.open()
+	_interact_prompt.set_show_prompt(false)
+
+
+func _close_pause() -> void:
+	GameState.mode = GameState.GameMode.GAMEPLAY
+	_pause_menu.close()
+
+
+func _on_pause_resume() -> void:
+	_close_pause()
+
+
+func _on_pause_quit() -> void:
+	get_tree().quit()
 
 
 func _update_interact_prompt() -> void:

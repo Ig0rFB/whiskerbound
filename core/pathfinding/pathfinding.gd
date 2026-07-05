@@ -21,7 +21,7 @@ static func build_from_grid(grid: CollisionGrid) -> AStarGrid2D:
 
 
 static func world_to_cell(world_pos: Vector2) -> Vector2i:
-	return Vector2i(int(floor(world_pos.x)), int(floor(world_pos.y)))
+	return CollisionGrid.world_to_cell(world_pos)
 
 
 static func find_path(
@@ -38,7 +38,9 @@ static func find_path(
 	if grid.is_cell_solid(to_cell.x, to_cell.y):
 		return PackedVector2Array()
 	if from_cell == to_cell:
-		return PackedVector2Array()
+		if from_world.distance_squared_to(to_world) < 0.0001:
+			return PackedVector2Array()
+		return PackedVector2Array([to_world])
 
 	var id_path := astar.get_id_path(from_cell, to_cell)
 	if id_path.is_empty():
@@ -46,5 +48,5 @@ static func find_path(
 
 	var waypoints := PackedVector2Array()
 	for cell in id_path:
-		waypoints.append(Vector2(float(cell.x) + 0.5, float(cell.y) + 0.5))
+		waypoints.append(CollisionGrid.cell_center(cell, grid.cell_size))
 	return waypoints

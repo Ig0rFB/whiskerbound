@@ -47,9 +47,5 @@ func _rebuild() -> void:
 			var tile := MeshInstance3D.new()
 			tile.mesh = tile_mesh
 			tile.set_surface_override_material(0, mat)
-			tile.position = Vector3(
-				float(x) * _grid.cell_size + _grid.cell_size * 0.5,
-				0.06,
-				float(z) * _grid.cell_size + _grid.cell_size * 0.5,
-			)
+			tile.position = CollisionGrid.cell_center_3d(Vector2i(x, z), _grid.cell_size, 0.06)
 			_mesh_root.add_child(tile)
