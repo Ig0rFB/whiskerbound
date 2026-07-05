@@ -13,5 +13,7 @@ var mode: GameMode = GameMode.GAMEPLAY
 var current_area_id: String = ""
 var player: CharacterBody3D = null
 var collision_grid: CollisionGrid = null
+var pathfinder: AStarGrid2D = null
+var companion: Node3D = null
 var show_collision_debug: bool = false
 var quest_flags: Dictionary = {}

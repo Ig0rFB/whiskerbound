@@ -2,7 +2,11 @@ extends SceneTree
 ## Headless smoke test — run with: bash scripts/run_smoke_test.sh
 
 const FEET_COLLIDER := Rect2(-0.25, -0.25, 0.5, 0.5)
+const COMPANION_COLLIDER := Rect2(-0.2, -0.2, 0.4, 0.4)
 const MovementLogic := preload("res://core/movement.gd")
+const GridPathfindingLogic := preload("res://core/pathfinding.gd")
+const CompanionLogicScript := preload("res://core/companion_logic.gd")
+const CompanionDataScript := preload("res://core/companion_data.gd")
 
 
 func _initialize() -> void:
@@ -35,13 +39,27 @@ func _initialize() -> void:
 		quit(1)
 		return
 
+	if game_state.pathfinder == null:
+		push_error("GameState.pathfinder is null")
+		quit(1)
+		return
+
+	if game_state.companion == null:
+		push_error("GameState.companion is null")
+		quit(1)
+		return
+
 	_test_movement_open(grid)
 	_test_movement_blocked(grid)
 	_test_tree_cell_solid(grid)
+	_test_companion_path(game_state.pathfinder, grid)
+	await _test_companion_follow(game_state.pathfinder, grid)
 
 	print(
 		"SMOKE_OK: player at ",
 		player.global_position,
+		" companion at ",
+		game_state.companion.global_position,
 		" area=",
 		game_state.current_area_id,
 	)
@@ -79,4 +97,44 @@ func _test_movement_blocked(grid) -> void:
 func _test_tree_cell_solid(grid) -> void:
 	if not grid.is_cell_solid(4, 5):
 		push_error("Expected tree cell (4, 5) to be solid")
+		quit(1)
+
+
+func _test_companion_path(astar, grid) -> void:
+	var path := GridPathfindingLogic.find_path(
+		astar,
+		grid,
+		Vector2(8.0, 8.0),
+		Vector2(10.0, 8.0),
+	)
+	if path.is_empty():
+		push_error("Expected A* path from (8,8) to (10,8)")
+		quit(1)
+
+
+func _test_companion_follow(astar, grid) -> void:
+	var data = CompanionDataScript.new()
+	var comp_feet := Vector2(8.0, 8.0)
+	var player_feet := Vector2(10.0, 8.0)
+
+	for _i in 30:
+		comp_feet = CompanionLogicScript.update(
+			comp_feet,
+			player_feet,
+			data,
+			grid,
+			astar,
+			COMPANION_COLLIDER,
+			0,
+			0.1,
+		)
+		await process_frame
+
+	if comp_feet.distance_to(Vector2(8.0, 8.0)) < 0.05:
+		push_error("Expected companion to move toward player")
+		quit(1)
+
+	var follow_dist: float = CompanionLogicScript.follow_distance(0)
+	if comp_feet.distance_to(player_feet) > follow_dist + 0.5:
+		push_error("Expected companion to finish within follow distance of player")
 		quit(1)

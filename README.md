@@ -2,7 +2,7 @@
 
 3D exploration and narrative adventure — Godot 4, soft stylised isometric camera, cat companion.
 
-**Status:** M2 complete — 8-direction movement, grid collision, wall sliding. **Next:** M3 (companion follow).
+**Status:** M3 complete — Lumi follows via A*. **Next:** M4 (NPC + dialogue).
 
 ## Requirements
 
@@ -22,8 +22,6 @@ open -a Godot .
 bash scripts/run_smoke_test.sh
 ```
 
-Expected: `SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green`
-
 ## Controls
 
 | Key | Action |
@@ -42,15 +40,13 @@ Expected: `SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green`
 
 ## Project layout
 
-See `PROJECT.md` for full architecture.
+```
+core/companion_logic.gd   — A* follow, repath, stuck teleport
+core/pathfinding.gd       — AStarGrid2D from collision grid
+scenes/companion/         — Lumi placeholder (cream sphere)
+```
 
-```
-core/collision_grid.gd    — solid/walkable grid (XZ)
-core/movement.gd          — wall-slide velocity (pure logic)
-input/input_actions.gd    — InputMap polling
-scenes/debug/             — collision overlay (H)
-scenes/areas/village_green.*
-```
+See `PROJECT.md` for full architecture.
 
 ## Archive
 

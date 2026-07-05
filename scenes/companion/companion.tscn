@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3 uid="uid://c3companion01"]
+
+[ext_resource type="Script" path="res://scenes/companion/companion.gd" id="1_companion"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_lumi"]
+radius = 0.2
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lumi"]
+shading_mode = 0
+albedo_color = Color(0.960784, 0.901961, 0.784314, 1)
+
+[node name="Companion" type="Node3D"]
+script = ExtResource("1_companion")
+
+[node name="Visual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("SphereMesh_lumi")
+surface_material_override/0 = SubResource("StandardMaterial3D_lumi")

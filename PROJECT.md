@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M2 complete — **M3 companion follow** next  
+> **Status**: M3 complete — **M4 NPC + dialogue** next  
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -513,9 +513,9 @@ Build in order. Each milestone = playable build.
 
 ### M3: Companion
 
-- [ ] Lumi follows via AStarGrid2D
-- [ ] Stop distance, repath, stuck teleport fallback
-- [ ] Depth sort by Z (companion draws in front/behind correctly)
+- [x] Lumi follows via AStarGrid2D
+- [x] Stop distance, repath, stuck teleport fallback
+- [x] Depth sort by Z (companion draws in front/behind correctly)
 
 ### M4: NPC + dialogue
 
@@ -569,7 +569,7 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 ## 15. Agent implementation notes
 
 1. **Read this entire document before writing code.**
-2. **Implement milestones in order** — M2 is complete; next is **M3** (companion follow).
+2. **Implement milestones in order** — M3 is complete; next is **M4** (NPC + dialogue).
 3. **Keep `core/` free of Node dependencies** — test movement and collision as plain GDScript unit tests where possible (`GdUnit4` optional).
 4. **Match 2D prototype feel** for movement speed, camera follow smoothing, and companion behaviour — reference `whiskerbound-2d-prototype` if needed.
 5. **Camera angle is fixed** — rig values live in `config.gd` (`CAMERA_YAW`, `CAMERA_PITCH`, `CAMERA_FOV`, `CAMERA_DISTANCE`).
@@ -590,14 +590,16 @@ bash scripts/run_smoke_test.sh
 
 Interactive: open project in Godot 4.7 and press **F5**. WASD to walk; **H** toggles collision overlay.
 
-### Verification (M2)
+### Verification (M3)
 
-Smoke test covers open movement, edge blocking, and solid tree cells:
+Smoke test verifies A* pathfinding, companion follow simulation, and spawn beside player:
 
 ```bash
 bash scripts/run_smoke_test.sh
-# Expected: SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green
+# Expected: SMOKE_OK with player and companion positions
 ```
+
+Walk away from Lumi in-game — cream sphere trails behind and stops ~1.25 units away.
 
 ---
 

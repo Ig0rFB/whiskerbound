@@ -1,7 +1,7 @@
 extends CharacterBody3D
 ## Player avatar — 8-direction grid movement with wall sliding (PROJECT.md §9.1).
 
-@onready var _visual: Node3D = $Visual
+@onready var _visual: MeshInstance3D = $Visual
 
 var _facing: GameTypes.Direction8 = GameTypes.Direction8.SOUTH
 var _feet_collider: Rect2 = PlayerCollider.feet_rect()
@@ -23,3 +23,5 @@ func _physics_process(delta: float) -> void:
 	if InputActions.move_vector.length_squared() > 0.0001:
 		_facing = GameTypes.facing_from_vector(InputActions.move_vector, _facing)
 		_visual.rotation.y = GameTypes.yaw_from_facing(_facing)
+
+	DepthSort.apply_to_mesh(_visual, 0.35, global_position.z)

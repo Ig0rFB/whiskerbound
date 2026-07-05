@@ -1,6 +1,6 @@
 # Whiskerbound — Agent Instructions
 
-Read `PROJECT.md` before writing code. Implement milestones **in order** (M2 done; **M3 next**).
+Read `PROJECT.md` before writing code. Implement milestones **in order** (M3 done; **M4 next**).
 
 ## Rules
 
@@ -17,11 +17,11 @@ Read `PROJECT.md` before writing code. Implement milestones **in order** (M2 don
 3. Update this file only if workflow or rules change
 4. Run `bash scripts/run_smoke_test.sh` — extend tests for new behaviour
 5. Run the project headless and interactively; fix errors and warnings
-6. Commit and push with message format: `M3: companion A* follow`
+6. Commit and push with message format: `M4: NPC interaction and dialogue`
 
-## Current milestone: M3
+## Current milestone: M4
 
-Lumi follows via `AStarGrid2D`, stop distance, repath, stuck teleport, depth sort by Z. See `PROJECT.md` §13.
+Elder Cat NPC, interact prompt, dialogue box with hardcoded lines. See `PROJECT.md` §13.
 
 ## Reference
 
