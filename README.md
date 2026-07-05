@@ -2,18 +2,13 @@
 
 3D exploration and narrative adventure — Godot 4, soft stylised isometric camera, cat companion.
 
-**Status:** M3 complete — Lumi follows via A*. **Next:** M4 (NPC + dialogue).
-
-## Requirements
-
-- [Godot 4.3+](https://godotengine.org/download) (developed on 4.7)
-- macOS Apple Silicon (primary target)
+**Status:** M4 complete — Elder Cat dialogue. **Next:** M5 (area transitions).
 
 ## Quick start
 
 ```bash
 open -a Godot .
-# Press F5 to play
+# Press F5
 ```
 
 ## Verify
@@ -26,28 +21,17 @@ bash scripts/run_smoke_test.sh
 
 | Key | Action |
 |-----|--------|
-| WASD / Arrows | Move (8 directions) |
+| WASD / Arrows | Move |
+| E / Space | Talk / advance dialogue |
 | H | Toggle collision debug overlay |
-| E / Space | Interact (M4+) |
-| M | Toggle minimap (M6+) |
-| Esc | Pause |
+| Esc | Pause (M6+) |
+
+## Try M4
+
+Walk south-east to the grey **Elder Cat** NPC. Press **E** to talk through three lines.
 
 ## Stack
 
-- Godot 4.7, Forward+
-- GDScript
-- Jolt Physics (3D)
+Godot 4.7 · GDScript · Forward+
 
-## Project layout
-
-```
-core/companion_logic.gd   — A* follow, repath, stuck teleport
-core/pathfinding.gd       — AStarGrid2D from collision grid
-scenes/companion/         — Lumi placeholder (cream sphere)
-```
-
-See `PROJECT.md` for full architecture.
-
-## Archive
-
-Design reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype)
+See `PROJECT.md` for architecture. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype)

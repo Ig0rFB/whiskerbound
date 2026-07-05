@@ -3,6 +3,7 @@ extends Node
 
 var move_vector: Vector2 = Vector2.ZERO
 var toggle_collision_debug_pressed: bool = false
+var interact_pressed: bool = false
 
 
 func poll() -> void:
@@ -18,3 +19,4 @@ func poll() -> void:
 	move_vector = Movement.normalise_input(move_vector)
 
 	toggle_collision_debug_pressed = Input.is_action_just_pressed("toggle_collision_debug")
+	interact_pressed = Input.is_action_just_pressed("interact")

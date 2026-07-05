@@ -24,6 +24,14 @@ func get_collision_grid() -> CollisionGrid:
 	return _collision_grid
 
 
+func get_npcs() -> Array:
+	var result: Array = []
+	if has_node("NPCs"):
+		for child in $NPCs.get_children():
+			result.append(child)
+	return result
+
+
 func _build_collision_grid() -> CollisionGrid:
 	var grid := CollisionGrid.new()
 	grid.configure(AREA_WIDTH, AREA_HEIGHT, Config.GRID_CELL)

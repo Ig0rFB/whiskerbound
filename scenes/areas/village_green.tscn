@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://d9villagegreen"]
+[gd_scene load_steps=5 format=3 uid="uid://d9villagegreen"]
 
 [ext_resource type="Script" path="res://scenes/areas/village_green.gd" id="1_area"]
+[ext_resource type="PackedScene" uid="uid://b4npc0000001" path="res://scenes/npc/npc.tscn" id="2_npc"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.658824, 0.847059, 0.941176, 1)
@@ -36,3 +37,11 @@ shadow_enabled = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 8)
 
 [node name="Decor" type="Node3D" parent="."]
+
+[node name="NPCs" type="Node3D" parent="."]
+
+[node name="ElderCat" parent="NPCs" instance=ExtResource("2_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 12)
+npc_id = "elder_cat"
+dialogue_id = 0
+display_name = "Elder Cat"

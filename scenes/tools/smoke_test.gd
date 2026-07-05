@@ -7,6 +7,8 @@ const MovementLogic := preload("res://core/movement.gd")
 const GridPathfindingLogic := preload("res://core/pathfinding.gd")
 const CompanionLogicScript := preload("res://core/companion_logic.gd")
 const CompanionDataScript := preload("res://core/companion_data.gd")
+const DialogueDataScript := preload("res://core/dialogue_data.gd")
+const InteractionLogicScript := preload("res://core/interaction.gd")
 
 
 func _initialize() -> void:
@@ -54,6 +56,8 @@ func _initialize() -> void:
 	_test_tree_cell_solid(grid)
 	_test_companion_path(game_state.pathfinder, grid)
 	await _test_companion_follow(game_state.pathfinder, grid)
+	_test_dialogue_data()
+	_test_elder_cat_npc(game_state)
 
 	print(
 		"SMOKE_OK: player at ",
@@ -137,4 +141,28 @@ func _test_companion_follow(astar, grid) -> void:
 	var follow_dist: float = CompanionLogicScript.follow_distance(0)
 	if comp_feet.distance_to(player_feet) > follow_dist + 0.5:
 		push_error("Expected companion to finish within follow distance of player")
+		quit(1)
+
+
+func _test_dialogue_data() -> void:
+	if DialogueDataScript.line_count(0) != 3:
+		push_error("Expected Elder Cat dialogue to have 3 lines")
+		quit(1)
+	if DialogueDataScript.get_line(0, 0).is_empty():
+		push_error("Expected non-empty first Elder Cat line")
+		quit(1)
+
+
+func _test_elder_cat_npc(game_state: Node) -> void:
+	if game_state.npcs.is_empty():
+		push_error("Expected at least one NPC in village_green")
+		quit(1)
+
+	var player: CharacterBody3D = game_state.player
+	var elder = game_state.npcs[0]
+	var player_at_npc := Vector2(elder.global_position.x, elder.global_position.z)
+	player.global_position = Vector3(player_at_npc.x, 0.0, player_at_npc.y)
+
+	if InteractionLogicScript.find_nearest_npc(player_at_npc, game_state.npcs) == null:
+		push_error("Expected Elder Cat in interact range when player stands on same tile")
 		quit(1)

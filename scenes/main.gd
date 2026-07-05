@@ -75,6 +75,7 @@ func _load_area(area_id: String) -> void:
 	GameState.current_area_id = area_id
 	GameState.player = _player
 	GameState.companion = _companion
+	GameState.npcs = _area.get_npcs()
 	Events.area_entered.emit(area_id)
 
 
@@ -96,3 +97,8 @@ func _clear_world() -> void:
 		_collision_debug = null
 	GameState.companion = null
 	GameState.pathfinder = null
+	GameState.npcs = []
+	GameState.dialogue_npc = null
+	GameState.dialogue_id = -1
+	GameState.dialogue_line = 0
+	GameState.mode = GameState.GameMode.GAMEPLAY

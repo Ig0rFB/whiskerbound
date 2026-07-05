@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M3 complete — **M4 NPC + dialogue** next  
+> **Status**: M4 complete — **M5 area transitions** next  
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -519,9 +519,11 @@ Build in order. Each milestone = playable build.
 
 ### M4: NPC + dialogue
 
-- [ ] Elder Cat NPC in village area
-- [ ] Interact → dialogue box with 3 hardcoded lines
-- [ ] Advance / dismiss; gameplay input blocked during dialogue
+- [x] Elder Cat NPC in village area
+- [x] Interact → dialogue box with 3 hardcoded lines
+- [x] Advance / dismiss; gameplay input blocked during dialogue
+- [x] Interact prompt when near NPC (early — full polish in M6)
+- [x] Player faces NPC when dialogue opens (early — M6)
 
 ### M5: Area transitions
 
@@ -569,7 +571,7 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 ## 15. Agent implementation notes
 
 1. **Read this entire document before writing code.**
-2. **Implement milestones in order** — M3 is complete; next is **M4** (NPC + dialogue).
+2. **Implement milestones in order** — M4 is complete; next is **M5** (area transitions).
 3. **Keep `core/` free of Node dependencies** — test movement and collision as plain GDScript unit tests where possible (`GdUnit4` optional).
 4. **Match 2D prototype feel** for movement speed, camera follow smoothing, and companion behaviour — reference `whiskerbound-2d-prototype` if needed.
 5. **Camera angle is fixed** — rig values live in `config.gd` (`CAMERA_YAW`, `CAMERA_PITCH`, `CAMERA_FOV`, `CAMERA_DISTANCE`).
@@ -600,6 +602,10 @@ bash scripts/run_smoke_test.sh
 ```
 
 Walk away from Lumi in-game — cream sphere trails behind and stops ~1.25 units away.
+
+### Verification (M4)
+
+Elder Cat stands at the south-east of the village (15, 12). Walk nearby — "Press E to talk" appears. Press **E** to advance three lines; **E** again to close. Movement is blocked while the dialogue box is open.
 
 ---
 

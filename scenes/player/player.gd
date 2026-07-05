@@ -25,3 +25,10 @@ func _physics_process(delta: float) -> void:
 		_visual.rotation.y = GameTypes.yaw_from_facing(_facing)
 
 	DepthSort.apply_to_mesh(_visual, 0.35, global_position.z)
+
+
+func face_toward_world(target_feet: Vector2) -> void:
+	var feet := Vector2(global_position.x, global_position.z)
+	var direction := target_feet - feet
+	_facing = GameTypes.facing_from_vector(direction, _facing)
+	_visual.rotation.y = GameTypes.yaw_from_facing(_facing)
