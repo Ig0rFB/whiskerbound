@@ -1,11 +1,11 @@
 # Whiskerbound — Agent Instructions
 
-Read `PROJECT.md` before writing code. Implement milestones **in order** (M1 done; **M2 next**).
+Read `PROJECT.md` before writing code. Implement milestones **in order** (M2 done; **M3 next**).
 
 ## Rules
 
 - Godot 4, GDScript
-- Keep `core/` free of Node dependencies (no `extends Node`, no draw calls)
+- Keep `core/` free of Node dependencies — no autoload references in `class_name` scripts
 - Placeholder primitives until real art — no pixel art, no voxels
 - Target: macOS Apple Silicon, 1920×1080 viewport, 60 FPS
 - British spelling in comments and user-facing strings
@@ -13,15 +13,15 @@ Read `PROJECT.md` before writing code. Implement milestones **in order** (M1 don
 ## After each milestone
 
 1. Update milestone checklists and status in `PROJECT.md`
-2. Update `README.md` (status, verify steps, layout if changed)
+2. Update `README.md` (status, controls, verify steps)
 3. Update this file only if workflow or rules change
-4. Run `bash scripts/run_smoke_test.sh` (extend test when new behaviour lands)
-5. Run the project (F5 or headless) and fix any errors or warnings
-6. Commit and push with message format: `M2: grid movement + collision`
+4. Run `bash scripts/run_smoke_test.sh` — extend tests for new behaviour
+5. Run the project headless and interactively; fix errors and warnings
+6. Commit and push with message format: `M3: companion A* follow`
 
-## Current milestone: M2
+## Current milestone: M3
 
-Grid movement on XZ, collision grid, wall sliding, feet-only sampling, collision debug overlay (H toggle). See `PROJECT.md` §13.
+Lumi follows via `AStarGrid2D`, stop distance, repath, stuck teleport, depth sort by Z. See `PROJECT.md` §13.
 
 ## Reference
 

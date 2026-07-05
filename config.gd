@@ -20,6 +20,8 @@ const PLAYER_SPEED := 4.5
 const COMPANION_FOLLOW_DISTANCE := 3.0
 const INTERACT_RADIUS := 1.5
 const COLLISION_INSET := 0.1
+const PLAYER_RADIUS := 0.25
+const PLAYER_CAPSULE_HEIGHT := 0.7
 
 # Placeholder colours (PROJECT.md §14)
 const COLOR_GROUND := Color("#7CB87C")
@@ -28,3 +30,4 @@ const COLOR_PLAYER := Color("#E8847A")
 const COLOR_COMPANION := Color("#F5E6C8")
 const COLOR_NPC := Color("#9B8FA8")
 const COLOR_SKY := Color("#A8D8F0")
+const COLOR_COLLISION_DEBUG := Color(1.0, 0.2, 0.2, 0.35)

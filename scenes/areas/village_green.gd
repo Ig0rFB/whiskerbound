@@ -6,8 +6,11 @@ const AREA_HEIGHT := 16
 
 @onready var _ground_root: Node3D = $Ground
 
+var _collision_grid: CollisionGrid
+
 
 func _ready() -> void:
+	_collision_grid = _build_collision_grid()
 	_build_ground_tiles()
 	_build_border_walls()
 	_build_trees()
@@ -15,6 +18,21 @@ func _ready() -> void:
 
 func get_player_spawn_global() -> Vector3:
 	return $PlayerSpawn.global_position
+
+
+func get_collision_grid() -> CollisionGrid:
+	return _collision_grid
+
+
+func _build_collision_grid() -> CollisionGrid:
+	var grid := CollisionGrid.new()
+	grid.configure(AREA_WIDTH, AREA_HEIGHT, Config.GRID_CELL)
+
+	# Trees and props block movement on their root cell.
+	for cell in [Vector2i(4, 5), Vector2i(15, 11), Vector2i(7, 12), Vector2i(12, 6)]:
+		grid.set_solid(cell.x, cell.y, true)
+
+	return grid
 
 
 func _build_ground_tiles() -> void:
@@ -76,6 +94,8 @@ func _build_trees() -> void:
 	for pos in [Vector3(4, 0, 5), Vector3(15, 0, 11), Vector3(7, 0, 12)]:
 		_add_tree(decor, pos, trunk_mat, leaf_mat)
 
+	_add_rock(decor, Vector3(12, 0, 6))
+
 
 func _add_tree(
 	parent: Node3D,
@@ -105,3 +125,18 @@ func _add_tree(
 	leaves.position = Vector3(0, 0.75, 0)
 	leaves.set_surface_override_material(0, leaf_mat)
 	tree.add_child(leaves)
+
+
+func _add_rock(parent: Node3D, pos: Vector3) -> void:
+	var rock := MeshInstance3D.new()
+	var rock_mesh := SphereMesh.new()
+	rock_mesh.radius = 0.35
+	rock_mesh.height = 0.5
+	rock.mesh = rock_mesh
+	rock.position = Vector3(pos.x + 0.5, 0.2, pos.z + 0.5)
+
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Config.COLOR_STONE
+	rock.set_surface_override_material(0, mat)
+	parent.add_child(rock)

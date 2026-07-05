@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M1 complete — **M2 grid movement + collision** next  
+> **Status**: M2 complete — **M3 companion follow** next  
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -506,10 +506,10 @@ Build in order. Each milestone = playable build.
 
 ### M2: Grid movement + collision
 
-- [ ] 8-direction movement on XZ plane
-- [ ] Collision grid blocks movement; wall sliding works
-- [ ] Feet-only sampling + collision inset
-- [ ] Debug overlay: draw collision grid (H toggle)
+- [x] 8-direction movement on XZ plane
+- [x] Collision grid blocks movement; wall sliding works
+- [x] Feet-only sampling + collision inset
+- [x] Debug overlay: draw collision grid (H toggle)
 
 ### M3: Companion
 
@@ -569,7 +569,7 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 ## 15. Agent implementation notes
 
 1. **Read this entire document before writing code.**
-2. **Implement milestones in order** — M1 is complete; next is **M2** (grid movement + collision).
+2. **Implement milestones in order** — M2 is complete; next is **M3** (companion follow).
 3. **Keep `core/` free of Node dependencies** — test movement and collision as plain GDScript unit tests where possible (`GdUnit4` optional).
 4. **Match 2D prototype feel** for movement speed, camera follow smoothing, and companion behaviour — reference `whiskerbound-2d-prototype` if needed.
 5. **Camera angle is fixed** — rig values live in `config.gd` (`CAMERA_YAW`, `CAMERA_PITCH`, `CAMERA_FOV`, `CAMERA_DISTANCE`).
@@ -588,7 +588,16 @@ bash scripts/run_smoke_test.sh
 # Expected: SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green
 ```
 
-Interactive: open project in Godot 4.7 and press **F5**. Expect moss tile grid, placeholder trees, coral capsule at centre, fixed isometric camera. No movement yet (M2).
+Interactive: open project in Godot 4.7 and press **F5**. WASD to walk; **H** toggles collision overlay.
+
+### Verification (M2)
+
+Smoke test covers open movement, edge blocking, and solid tree cells:
+
+```bash
+bash scripts/run_smoke_test.sh
+# Expected: SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green
+```
 
 ---
 

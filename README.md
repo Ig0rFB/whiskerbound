@@ -2,7 +2,7 @@
 
 3D exploration and narrative adventure — Godot 4, soft stylised isometric camera, cat companion.
 
-**Status:** M1 complete — village area, isometric camera, player spawn. **Next:** M2 (grid movement + collision).
+**Status:** M2 complete — 8-direction movement, grid collision, wall sliding. **Next:** M3 (companion follow).
 
 ## Requirements
 
@@ -12,13 +12,9 @@
 ## Quick start
 
 ```bash
-# Open in editor
 open -a Godot .
-# Or run from terminal
-/Applications/Godot.app/Contents/MacOS/Godot --path .
+# Press F5 to play
 ```
-
-Press **F5** (Play) to run `scenes/main.tscn`.
 
 ## Verify
 
@@ -26,9 +22,17 @@ Press **F5** (Play) to run `scenes/main.tscn`.
 bash scripts/run_smoke_test.sh
 ```
 
-Expected output: `SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green`
+Expected: `SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green`
 
-Headless and interactive runs were checked on Godot 4.7 with no script errors or engine warnings.
+## Controls
+
+| Key | Action |
+|-----|--------|
+| WASD / Arrows | Move (8 directions) |
+| H | Toggle collision debug overlay |
+| E / Space | Interact (M4+) |
+| M | Toggle minimap (M6+) |
+| Esc | Pause |
 
 ## Stack
 
@@ -38,28 +42,16 @@ Headless and interactive runs were checked on Godot 4.7 with no script errors or
 
 ## Project layout
 
-See `PROJECT.md` for full architecture and milestone roadmap.
+See `PROJECT.md` for full architecture.
 
 ```
-scenes/main.tscn              — entry point
-scenes/areas/village_green.*  — first playable area
-scenes/camera/camera_rig.*    — fixed isometric follow camera
-scenes/player/player.*        — placeholder capsule
-config.gd                     — tunables (camera, colours, speeds)
-autoloads/                    — GameState, Events
-core/                         — pure logic (no Node dependencies)
-scripts/run_smoke_test.sh     — headless M1 regression check
+core/collision_grid.gd    — solid/walkable grid (XZ)
+core/movement.gd          — wall-slide velocity (pure logic)
+input/input_actions.gd    — InputMap polling
+scenes/debug/             — collision overlay (H)
+scenes/areas/village_green.*
 ```
-
-## Controls (M2+)
-
-| Key | Action |
-|-----|--------|
-| WASD / Arrows | Move |
-| E / Space | Interact |
-| M | Toggle minimap |
-| Esc | Pause |
 
 ## Archive
 
-Design reference only: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (Odin/Raylib pixel V1).
+Design reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype)

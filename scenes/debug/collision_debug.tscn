@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://collisiondebug01"]
+
+[ext_resource type="Script" path="res://scenes/debug/collision_debug.gd" id="1_debug"]
+
+[node name="CollisionDebug" type="Node3D"]
+script = ExtResource("1_debug")
