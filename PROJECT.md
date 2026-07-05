@@ -1,8 +1,8 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: Greenfield — pre-M1  
+> **Status**: M1 complete — **M2 grid movement + collision** next  
 > **Version**: 0.1.0  
-> **Engine**: Godot 4.x  
+> **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
 > **Authors**: Igor Barbosa (lead engineer), Yvonne Reinhardt (narrative & level design)  
 > **Supersedes**: `whiskerbound-2d-prototype` (Odin/Raylib pixel-art V1 — design reference only)
@@ -498,11 +498,11 @@ Build in order. Each milestone = playable build.
 
 ### M1: Window + 3D area + camera
 
-- [ ] Godot project opens on macOS
-- [ ] `village_green.tscn` loads with placeholder ground mesh
-- [ ] Camera rig: fixed isometric angle, follows player
-- [ ] 1920×1080 viewport with letterboxing
-- [ ] Player spawns at PlayerSpawn marker
+- [x] Godot project opens on macOS
+- [x] `village_green.tscn` loads with placeholder ground mesh
+- [x] Camera rig: fixed isometric angle, follows player
+- [x] 1920×1080 viewport with letterboxing
+- [x] Player spawns at PlayerSpawn marker
 
 ### M2: Grid movement + collision
 
@@ -569,14 +569,26 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 ## 15. Agent implementation notes
 
 1. **Read this entire document before writing code.**
-2. **Implement M1 first** — do not skip to puzzles or final art.
+2. **Implement milestones in order** — M1 is complete; next is **M2** (grid movement + collision).
 3. **Keep `core/` free of Node dependencies** — test movement and collision as plain GDScript unit tests where possible (`GdUnit4` optional).
 4. **Match 2D prototype feel** for movement speed, camera follow smoothing, and companion behaviour — reference `whiskerbound-2d-prototype` if needed.
-5. **Camera angle is fixed** — document final rig values in `config.gd` after tuning.
+5. **Camera angle is fixed** — rig values live in `config.gd` (`CAMERA_YAW`, `CAMERA_PITCH`, `CAMERA_FOV`, `CAMERA_DISTANCE`).
 6. **No pixel art, no voxels, no free camera in V1.**
-7. **Commit after each milestone** with message format: `M1: window + 3D area + camera rig`
-8. **British spelling** in comments and user-facing strings.
-9. Target: Godot 4.3+, macOS Apple Silicon, 60 FPS on placeholder assets.
+7. **After each milestone**: update this file (checklist + status), `README.md`, and `AGENTS.md` if workflow changed; run `bash scripts/run_smoke_test.sh`; commit and push.
+8. **Commit message format**: `M1: window + 3D area + camera rig`
+9. **British spelling** in comments and user-facing strings.
+10. Target: Godot 4.3+, macOS Apple Silicon, 60 FPS on placeholder assets.
+
+### Verification (M1)
+
+Headless smoke test (no display required):
+
+```bash
+bash scripts/run_smoke_test.sh
+# Expected: SMOKE_OK: player at (10.0, 0.0, 8.0) area=village_green
+```
+
+Interactive: open project in Godot 4.7 and press **F5**. Expect moss tile grid, placeholder trees, coral capsule at centre, fixed isometric camera. No movement yet (M2).
 
 ---
 
