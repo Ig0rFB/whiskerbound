@@ -1,6 +1,8 @@
 class_name GroundedCharacter
 extends CharacterBody3D
 ## Default physics body for companions and NPCs — gravity, floor snap, capsule collision.
+##
+## Implementation guide: PROJECT.md §9.0
 
 @export var body_radius: float = Config.CHARACTER_BODY_RADIUS
 @export var body_height: float = Config.CHARACTER_BODY_HEIGHT

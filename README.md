@@ -2,7 +2,7 @@
 
 3D exploration and narrative adventure — Godot 4, third-person controller playground, cat companion follow.
 
-**Status:** M6 mechanics polish — TPC playground, unified debug HUD, grounded companions/NPCs.
+**Status:** M5 next (area transitions) — see `PROJECT.md` §13 for the authoritative checklist. M6 items landed early: TPC playground, unified debug HUD, grounded companions/NPCs.
 
 ## Quick start
 
@@ -55,4 +55,4 @@ Boot into the **TPC playground** (Jeheno test map). Press **H** for the unified 
 
 Godot 4.7 · GDScript · Forward+ · [Jeheno Third-Person Controller](addons/JehenoThirdPersonController/)
 
-See `PROJECT.md` for architecture. Design reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype).
+See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.0** (`GroundedCharacter`), **§9.1** (player physics via Jeheno TPC), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics).
