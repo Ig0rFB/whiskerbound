@@ -1,0 +1,183 @@
+[gd_scene load_steps=18 format=3 uid="uid://cla33c2qqx78a"]
+
+[ext_resource type="Material" uid="uid://coy4nf1ts2u0q" path="res://Art/Materials/grid_mat.tres" id="1_dwgxl"]
+[ext_resource type="PackedScene" uid="uid://bgkmxyw21pc1m" path="res://Player/PlayerCharacterScene.tscn" id="2_dalrb"]
+[ext_resource type="Script" uid="uid://c0ro7moxv8x1j" path="res://Systems/Interactions/Interactable.gd" id="3_abcde"]
+[ext_resource type="PackedScene" uid="uid://bdyptm7smjixm" path="res://addons/gdquest_gdbot/gdbot_skin.tscn" id="4_gh123"]
+[ext_resource type="PackedScene" uid="uid://cy36aygvs66pn" path="res://addons/gdquest_gobot/gobot_skin.tscn" id="5_ij567"]
+[ext_resource type="PackedScene" uid="uid://npcbase12345" path="res://NPCs/BaseNPC.tscn" id="6_abc12"]
+[ext_resource type="PackedScene" path="res://addons/gdquest_sophia/sophia_skin.tscn" id="7_fgh34"]
+[ext_resource type="PackedScene" uid="uid://bpjqcswabdtyb" path="res://addons/gdquest_beetle_bot/beetlebot_skin.tscn" id="8_fddwd"]
+[ext_resource type="PackedScene" uid="uid://tyjgdu65yj3m" path="res://addons/gdquest_round_bat/round_bat_skin.tscn" id="9_1jf24"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_6f4by"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_d8mrn"]
+sky_material = SubResource("ProceduralSkyMaterial_6f4by")
+
+[sub_resource type="Environment" id="Environment_5lc62"]
+background_mode = 2
+sky = SubResource("Sky_d8mrn")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_xuepk"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_q3h73"]
+size = Vector2(110, 110)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_12345"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_axkwo"]
+material = SubResource("StandardMaterial3D_12345")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dalrb"]
+
+[node name="TestMap" type="Node3D"]
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Environment"]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 46.7243, -24.7815)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Environment"]
+environment = SubResource("Environment_5lc62")
+
+[node name="Structures" type="Node3D" parent="."]
+
+[node name="Ground" type="StaticBody3D" parent="Structures"]
+collision_layer = 2
+metadata/_edit_lock_ = true
+metadata/_edit_group_ = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Structures/Ground"]
+shape = SubResource("WorldBoundaryShape3D_xuepk")
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Structures/Ground"]
+material_override = ExtResource("1_dwgxl")
+mesh = SubResource("PlaneMesh_q3h73")
+skeleton = NodePath("../../..")
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="Structures"]
+material_override = ExtResource("1_dwgxl")
+use_collision = true
+collision_layer = 2
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -7)
+size = Vector3(8, 2, 10)
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3, 23.5)
+size = Vector3(4, 6, 1)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, -9)
+size = Vector3(4, 2, 6)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1, -9)
+size = Vector3(6, 2, 6)
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 1, -17)
+size = Vector3(4, 2, 4)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 2, -26)
+size = Vector3(4, 4, 4)
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 2.5, -38.5)
+size = Vector3(3, 5, 5)
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.5, -44.5)
+size = Vector3(9, 7, 5)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 2, -12)
+size = Vector3(6, 4, 12)
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 3, -21)
+size = Vector3(6, 6, 6)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -18)
+size = Vector3(14, 6, 12)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2, 0, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D5" type="CSGPolygon3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 26, 0, -6)
+polygon = PackedVector2Array(-1, 0, 0, 4, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D4" type="CSGPolygon3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -6, 0, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D3" type="CSGPolygon3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -18, 4, -18)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 6.0
+
+[node name="CSGPolygon3D2" type="CSGPolygon3D" parent="Structures/CSGCombiner3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 6.0
+
+[node name="TestInteractable" type="StaticBody3D" parent="Structures"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -14)
+collision_layer = 2
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Structures/TestInteractable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.506465, 0)
+mesh = SubResource("BoxMesh_axkwo")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Structures/TestInteractable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.6174183, 0)
+shape = SubResource("BoxShape3D_dalrb")
+
+[node name="Interactable" type="Node" parent="Structures/TestInteractable"]
+script = ExtResource("3_abcde")
+
+[node name="GDBot_NPC" parent="." instance=ExtResource("6_abc12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.926079, 6.15, -20.947899)
+
+[node name="GDbotSkin" parent="GDBot_NPC" instance=ExtResource("4_gh123")]
+
+[node name="Gobot_NPC" parent="." instance=ExtResource("6_abc12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.531846, 6.02548, -22.8166)
+
+[node name="gobot_skin" parent="Gobot_NPC" instance=ExtResource("5_ij567")]
+
+[node name="Sophia_NPC" parent="." instance=ExtResource("6_abc12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.101416, 7.032059, -44.130108)
+
+[node name="SophiaSkin" parent="Sophia_NPC" instance=ExtResource("7_fgh34")]
+
+[node name="Player" parent="." instance=ExtResource("2_dalrb")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2170696, 6.00505, -16.052776)
+
+[node name="Beetle_NPC" parent="." instance=ExtResource("6_abc12")]
+transform = Transform3D(-2.8849517e-08, 0, -0.66, 0, 0.66, 0, 0.66, 0, -2.8849517e-08, 31.874277, 4.0077906, -26.071953)
+motion_mode = 1
+
+[node name="BeetlebotSkin" parent="Beetle_NPC" instance=ExtResource("8_fddwd")]
+
+[node name="Bat_NPC" parent="." instance=ExtResource("6_abc12")]
+transform = Transform3D(-0.7313537, 0, -0.68199825, 0, 1, 0, 0.68199825, 0, -0.7313537, 0.96691465, 7.149947, -14.215019)
+motion_mode = 1
+motion_type = 1
+
+[node name="RoundBatSkin" parent="Bat_NPC" instance=ExtResource("9_1jf24")]
