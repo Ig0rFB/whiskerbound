@@ -55,7 +55,10 @@ func _configure_grounded_collision_shape() -> void:
 	_collision_shape.disabled = false
 
 
-## Static column from mesh top to floor — floating CharacterBody3D does not block the player.
+## Static column spanning floor to chest height for a floating NPC.
+## The flyer sits well above the ground, so its own capsule never overlaps the player capsule
+## (that vertical gap, not the FLOATING motion mode, is why the player used to walk under it).
+## A StaticBody3D child carries the floor-length shape so it does not fight the moving body's physics.
 func _configure_floating_column_collision() -> void:
 	if not is_inside_tree():
 		return
