@@ -67,13 +67,17 @@ const COMPANION_MODEL_YAW_OFFSET := PI
 # Companion navigation (NavigationAgent3D + runtime-baked NavigationRegion3D — PROJECT.md §4).
 # Navmesh bake parameters (applied to the region's NavigationMesh before baking).
 const NAV_SOURCE_GROUP := "navigation_source"
-const NAV_CELL_SIZE := 0.2
-const NAV_CELL_HEIGHT := 0.1
-const NAV_AGENT_RADIUS := 0.3
+## Cell size/height match the default navigation map (0.25) to avoid rasterisation mismatch.
+## Agent radius/height/climb are exact multiples of the cell dims to avoid precision ceiling.
+const NAV_CELL_SIZE := 0.25
+const NAV_CELL_HEIGHT := 0.25
+const NAV_AGENT_RADIUS := 0.25
 const NAV_AGENT_HEIGHT := 0.5
 ## Max vertical ledge the bake will bridge — keeps the CSG-top surfaces connected.
 const NAV_AGENT_MAX_CLIMB := 0.5
 const NAV_AGENT_MAX_SLOPE_DEG := 45.0
+## Baked navmesh resource shipped with the playground (regenerate via scenes/tools/bake_playground_navmesh.gd).
+const PLAYGROUND_NAVMESH_PATH := "res://scenes/areas/playground_navmesh.tres"
 # NavigationAgent3D behaviour on the companion.
 const COMPANION_NAV_PATH_DESIRED_DISTANCE := 0.4
 const COMPANION_NAV_TARGET_DESIRED_DISTANCE := 0.4
