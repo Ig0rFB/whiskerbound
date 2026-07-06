@@ -83,10 +83,11 @@ so it does not fight the ground if the Bat ever bobs/animates.
 
 ## 4. Checklist (tick as landed; commit + push per item)
 
-- [ ] Plan document committed (this file)
-- [ ] A. Correct the misleading root-cause comment in `reference_npc.gd`
-- [ ] B + D. Readiness-gated column build (retry until floor hit, cap, warn on miss);
+- [x] Plan document committed (this file)
+- [x] A. Correct the misleading root-cause comment in `reference_npc.gd`
+- [x] B + D. Readiness-gated column build (retry until floor hit, cap, warn on miss);
       replaces the magic 2-frame deferral. Adds `NPC_FLOATING_COLUMN_MAX_ATTEMPTS` to `config.gd`.
+      Verified headlessly: Bat column builds span 8.65, layer 1 / mask 0, no floor-miss warning.
 - [ ] E. Decision on authored vs runtime column (blocked on Igor)
 - [ ] F. Decision on altitude-independent interaction (blocked on Igor)
 - [ ] G. Decision on `_find_skin_root` robustness (blocked on Igor; bundle with E)
