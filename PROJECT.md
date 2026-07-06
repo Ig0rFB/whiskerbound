@@ -504,14 +504,16 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 - Horizontal motion from `CompanionLogic`; vertical motion from physics (not manual Y raycasts)
 - `cat.glb` mesh under `Visual/Model`; editor floor snap via raycast (place X/Z only in area scenes)
 
-**Follow vs autonomous (M3 extension — in progress)**
+**Follow vs autonomous (M3 extension — see `companion logic.md`)**
 
-| Mode | When | Logic |
+Shipping behaviour is **follow-only** via `CompanionLogic`. Autonomous roam/sit/meow will use a companion-centric brain (not player idle detection); design and phased plan are in **`companion logic.md`** at the repo root.
+
+| Mode | Status | Logic |
 |---|---|---|
-| **Follow** | Player moving, or companion far from player | `CompanionLogic` — A* toward predicted player feet |
-| **Autonomous** | Player idle ≥ `COMPANION_IDLE_ENTER_SECONDS` and companion within wander radius | `CompanionIdleLogic` — wander, sit, play, groom |
+| **Follow** | Shipped | `CompanionLogic` — A* toward predicted player feet |
+| **Roam / activities / meow** | Planned (Phase 1+) | `CompanionBrain` — blend follow with companion-owned urges |
 
-Autonomous activities (timer-based state machine in `core/companion/`):
+Autonomous activities (planned — timer/urge state machine in `core/companion/`):
 
 - **Wander** — random clear cell near player (`COMPANION_WANDER_RADIUS`), A* path
 - **Sit / play / groom** — hold position; play named clip when present in `cat.glb`
@@ -519,7 +521,7 @@ Autonomous activities (timer-based state machine in `core/companion/`):
 
 Animation names are tunables in `config.gd` (`COMPANION_ANIM_SIT`, etc.). Only `walk` exists in the GLB today; idle clips are placeholders until art lands.
 
-**Scene wiring:** `scenes/companion/companion.gd` reads player `feet_velocity`, delegates to core logic, drives `AnimationPlayer`, emits barks. UI listens via `Events` — no scene-tree lookups from `core/`.
+**Scene wiring:** `scenes/companion/companion.gd` delegates to `CompanionLogic`, drives `AnimationPlayer`. Bark UI (`ui/companion_bark.tscn`) listens via `Events` — wired when brain Phase 2 lands.
 
 ### 9.3 NPC interaction
 

@@ -31,6 +31,7 @@ func reset_autonomous() -> void:
 	activity = CompanionActivity.Type.NONE
 	activity_timer = 0.0
 	wander_target = Vector2.ZERO
+	idle_timer = 0.0
 	clear_path()
 
 

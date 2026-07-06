@@ -35,7 +35,7 @@ const COMPANION_MODEL_SORT_HEIGHT := 0.2
 const COMPANION_MESH_FLOOR_CLEARANCE := 0.15
 const COMPANION_WALK_ANIM := "walk"
 const COMPANION_WALK_ANIM_SPEED := 1.0
-# Placeholder names — wire when cat.glb gains clips (§9.2).
+# Placeholder names — wire when cat.glb gains clips (§9.2; see companion logic.md).
 const COMPANION_ANIM_SIT := "sit"
 const COMPANION_ANIM_PLAY := "play"
 const COMPANION_ANIM_GROOM := "groom"
