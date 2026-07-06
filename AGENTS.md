@@ -17,11 +17,11 @@ Igor is a beginner learning Godot. Therefore:
 
 - Godot 4.7, GDScript only. No C#, no GDExtension.
 - Implement milestones **in order** per `PROJECT.md` §13. Do not start later-milestone work early without approval.
-- **Collision model** (`PROJECT.md` §4): player/NPC/companion blocking uses **3D `CharacterBody3D` physics** (Jeheno TPC for player, `GroundedCharacter` for others). The 2D `CollisionGrid` is for companion pathfinding, minimap, and debug — not player wall collision in the playground. Do not revert actors to grid-sampled Y or `Node3D` roots.
+- **Collision model** (`PROJECT.md` §4): player/NPC/companion blocking uses **3D `CharacterBody3D` physics** (GDQuest reference player for the protagonist; `GroundedCharacter` for companion; reference `NPCBody` for playground NPCs). The 2D `CollisionGrid` is for companion pathfinding, minimap, and debug — not player wall collision in the playground. Do not revert actors to grid-sampled Y or `Node3D` roots.
 - **`core/` layering** (full rules in `PROJECT.md` §6.1): no autoload references, no scene-tree lookups outside own children, no `res://` scene paths. Pure-logic scripts must not extend `Node`. Sole Node-base exception: `core/world/grounded_character.gd`.
 - **Signals up, calls down.** Parents may call children; children signal upward. Cross-scene communication via `Events` autoload. Never `get_parent().do_thing()` or `get_node("../../X")`.
 - Placeholder primitives until real art (spec: `PROJECT.md` §14). No pixel art, no voxels.
-- New grounded actors follow the §9.0 checklist exactly.
+- New companions follow the §9.0 checklist. Playground NPCs use `reference_npc.gd` per `PROJECT.md` §9.3.
 - British spelling in comments, identifiers where words differ (colour), and user-facing strings.
 
 ## GDScript standards
@@ -78,7 +78,8 @@ Mechanic and level specs come from the narrative designer. Before implementing: 
 
 ## Reference
 
-- **Architecture & collision:** `PROJECT.md` §4 (dual-layer model), §9.0 (`GroundedCharacter`), §9.1 (Jeheno player physics)
+- **Architecture & collision:** `PROJECT.md` §4 (dual-layer model), §9.0 (`GroundedCharacter`), §9.1 (GDQuest player), §9.3 (NPC interaction)
 - 2D prototype (companion/pathfinding algorithms only, not player collision): `reference/whiskerbound-2d-prototype` locally, https://github.com/Ig0rFB/whiskerbound-2d-prototype
-- Player controller: `addons/JehenoThirdPersonController/` — **runtime dependency**; adapt via `scenes/player/tpc_player.gd`, never edit addon scripts in place. Playground map also lives in the addon (`Map/test_map_scene.tscn`).
+- **Player controller:** `reference/untitled-game/` — copied to `scenes/player/gdquest/`; adapt only via `scenes/player/whiskerbound_player.gd`. Do not edit gdquest scripts in place. Jeheno addon (`addons/JehenoThirdPersonController/`) is legacy and unused at runtime.
+- **Playground:** `scenes/areas/playground.tscn` (not the Jeheno test map).
 - **LSP / global classes:** run `godot --headless --import` after adding `class_name` scripts. Commit new `*.gd.uid` files and `.godot/global_script_class_cache.cfg`. Do **not** add `class_name` to autoload scripts — it shadows the singleton and breaks calls like `GameSettings.load()`.

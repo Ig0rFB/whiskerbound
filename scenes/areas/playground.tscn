@@ -5,6 +5,11 @@
 [ext_resource type="PackedScene" uid="uid://0nhxf5qfk441" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://c3companion01" path="res://scenes/companion/companion.tscn" id="4_companion"]
 [ext_resource type="PackedScene" uid="uid://b4npc0000001" path="res://scenes/npc/npc.tscn" id="5_npc"]
+[ext_resource type="PackedScene" uid="uid://bdyptm7smjixm" path="res://addons/gdquest_gdbot/gdbot_skin.tscn" id="6_gdbot_skin"]
+[ext_resource type="PackedScene" uid="uid://cy36aygvs66pn" path="res://addons/gdquest_gobot/gobot_skin.tscn" id="7_gobot_skin"]
+[ext_resource type="PackedScene" path="res://addons/gdquest_sophia/sophia_skin.tscn" id="8_sophia_skin"]
+[ext_resource type="PackedScene" uid="uid://bpjqcswabdtyb" path="res://addons/gdquest_beetle_bot/beetlebot_skin.tscn" id="9_beetle_skin"]
+[ext_resource type="PackedScene" uid="uid://tyjgdu65yj3m" path="res://addons/gdquest_round_bat/round_bat_skin.tscn" id="10_bat_skin"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -50,6 +55,7 @@ environment = SubResource("Environment_main")
 [node name="Structures" type="Node3D" parent="WorldOffset" unique_id=798834872]
 
 [node name="Ground" type="StaticBody3D" parent="WorldOffset/Structures" unique_id=1658055732]
+collision_layer = 2
 collision_mask = 2
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WorldOffset/Structures/Ground" unique_id=1106144682]
@@ -61,6 +67,7 @@ mesh = SubResource("PlaneMesh_ground")
 skeleton = NodePath("../../..")
 
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="WorldOffset/Structures" unique_id=1981449746]
+collision_layer = 2
 material_override = SubResource("StandardMaterial3D_grid")
 use_collision = true
 collision_mask = 2
@@ -141,12 +148,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 6, 40)
 gizmo_extents = 1.0
 
 [node name="Player" parent="Actors" unique_id=2095361906 instance=ExtResource("3_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 6, 38)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.783, 6.005, 39.947)
 
 [node name="Companions" type="Node3D" parent="Actors" unique_id=1982746501]
 
 [node name="Lumi" parent="Actors/Companions" unique_id=1307605848 instance=ExtResource("4_companion")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.099247, 6, 38)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.882, 6, 39.947)
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
@@ -157,8 +164,33 @@ body_height = 0.35
 
 [node name="NPCs" type="Node3D" parent="." unique_id=448952164]
 
-[node name="ElderCat" parent="NPCs" unique_id=892781998 instance=ExtResource("5_npc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 6, 42)
-npc_id = "elder_cat"
-dialogue_id = 0
-display_name = "Elder Cat"
+[node name="GDBotNpc" parent="NPCs" instance=ExtResource("5_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.074, 6.15, 35.052)
+npc_id = "gdbot"
+
+[node name="GDbotSkin" parent="NPCs/GDBotNpc" instance=ExtResource("6_gdbot_skin")]
+
+[node name="GobotNpc" parent="NPCs" instance=ExtResource("5_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56.532, 6.025, 33.183)
+npc_id = "gobot"
+
+[node name="GobotSkin" parent="NPCs/GobotNpc" instance=ExtResource("7_gobot_skin")]
+
+[node name="SophiaNpc" parent="NPCs" instance=ExtResource("5_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.101, 7.032, 11.87)
+npc_id = "sophia"
+
+[node name="SophiaSkin" parent="NPCs/SophiaNpc" instance=ExtResource("8_sophia_skin")]
+
+[node name="BeetleNpc" parent="NPCs" instance=ExtResource("5_npc")]
+transform = Transform3D(0.66, 0, 0, 0, 0.66, 0, 0, 0, 0.66, 87.874, 4.008, 29.928)
+npc_id = "beetle"
+
+[node name="BeetlebotSkin" parent="NPCs/BeetleNpc" instance=ExtResource("9_beetle_skin")]
+
+[node name="BatNpc" parent="NPCs" instance=ExtResource("5_npc")]
+transform = Transform3D(-0.7313537, 0, -0.68199825, 0, 1, 0, 0.68199825, 0, -0.7313537, 56.967, 7.15, 41.785)
+npc_id = "bat"
+motion_type = 1
+
+[node name="RoundBatSkin" parent="NPCs/BatNpc" instance=ExtResource("10_bat_skin")]

@@ -11,6 +11,15 @@ const LOOK_DEADZONE := 0.18
 var feet_velocity: Vector2 = Vector2.ZERO
 
 var _last_feet: Vector2 = Vector2.ZERO
+var _ray_exceptions_bound: bool = false
+var _interaction_ray_hit: bool = false
+var _interaction_ray_from: Vector3 = Vector3.ZERO
+var _interaction_ray_to: Vector3 = Vector3.ZERO
+var _interaction_ray_hit_point: Vector3 = Vector3.ZERO
+var _interaction_ray_collider_name: String = ""
+var _interaction_ray_collider_layer: int = 0
+
+@onready var _interaction_raycast: RayCast3D = %InteractionRaycast
 
 
 func _ready() -> void:
@@ -18,6 +27,8 @@ func _ready() -> void:
 	collision_mask = Config.COLLISION_LAYER_WORLD | Config.COLLISION_LAYER_CHARACTER
 	_disable_embedded_hud()
 	_disable_addon_camera_zoom()
+	if _interaction_raycast == null:
+		push_error("TpcPlayer: missing %InteractionRaycast on VisualRoot (check player.tscn)")
 	call_deferred("_bind_camera_to_game_state")
 	call_deferred("capture_camera_mouse")
 
@@ -38,6 +49,8 @@ func _disable_addon_camera_zoom() -> void:
 
 func _process(delta: float) -> void:
 	super._process(delta)
+	if GameState.show_debug_hud:
+		_sync_interaction_ray()
 	if GameState.mode == GameState.GameMode.GAMEPLAY:
 		_apply_gamepad_look(delta)
 		_poll_camera_zoom(delta)
@@ -72,8 +85,84 @@ func _physics_process(delta: float) -> void:
 		else:
 			gravity_apply(delta)
 		move_and_slide()
+		Events.interact_target_changed.emit("")
 		return
+	_handle_interaction()
 	super._physics_process(delta)
+
+
+## Reference untitled-game interaction — ray from VisualRoot, camera-facing basis.
+func _handle_interaction() -> void:
+	if _interaction_raycast == null or cam_holder == null:
+		Events.interact_target_changed.emit("")
+		return
+
+	_sync_interaction_ray()
+
+	if _interaction_raycast.is_colliding():
+		var collider: Object = _interaction_raycast.get_collider()
+		var interactable_owner := _find_interactable_owner(collider)
+
+		if interactable_owner != null:
+			Events.interact_target_changed.emit(interactable_owner.name)
+		else:
+			Events.interact_target_changed.emit("")
+	else:
+		Events.interact_target_changed.emit("")
+
+
+func _find_interactable_owner(collider: Object) -> Node:
+	var node: Node = collider as Node
+	while node != null:
+		if node.has_node("Interactable"):
+			return node
+		node = node.get_parent()
+	return null
+
+
+## Aligns the interaction ray with the camera and caches debug draw data.
+func _sync_interaction_ray() -> void:
+	if _interaction_raycast == null or cam_holder == null:
+		_interaction_ray_hit = false
+		_interaction_ray_collider_name = ""
+		_interaction_ray_collider_layer = 0
+		return
+
+	_bind_interaction_ray_exceptions()
+	# Reference untitled-game: chest origin, camera-facing direction (not full camera transform).
+	var camera: Camera3D = cam_holder.cam as Camera3D
+	if camera == null:
+		_interaction_ray_hit = false
+		return
+	_interaction_raycast.global_transform.basis = camera.global_transform.basis
+	_interaction_raycast.force_raycast_update()
+
+	var ray_length: float = _interaction_raycast.target_position.length()
+	var ray_dir: Vector3 = -_interaction_raycast.global_transform.basis.z
+	_interaction_ray_from = _interaction_raycast.global_position
+	_interaction_ray_to = _interaction_ray_from + ray_dir * ray_length
+	_interaction_ray_hit = _interaction_raycast.is_colliding()
+	_interaction_ray_hit_point = (
+		_interaction_raycast.get_collision_point() if _interaction_ray_hit else _interaction_ray_to
+	)
+	_interaction_ray_collider_name = ""
+	_interaction_ray_collider_layer = 0
+	if _interaction_ray_hit:
+		var collider: Object = _interaction_raycast.get_collider()
+		if collider is CollisionObject3D:
+			_interaction_ray_collider_layer = (collider as CollisionObject3D).collision_layer
+		if collider is Node:
+			_interaction_ray_collider_name = (collider as Node).name
+
+
+func _bind_interaction_ray_exceptions() -> void:
+	if _ray_exceptions_bound:
+		return
+	_interaction_raycast.add_exception(self)
+	var companion: Node = GameState.companion
+	if companion is CollisionObject3D:
+		_interaction_raycast.add_exception(companion as CollisionObject3D)
+	_ray_exceptions_bound = true
 
 
 ## Jeheno locomotion label shown on the debug HUD (`State: Idle`, `Walk`, …).
@@ -86,6 +175,30 @@ func get_locomotion_state_name() -> String:
 ## True when the player is in Jeheno `IdleState` — same signal the debug HUD displays.
 func is_locomotion_idle() -> bool:
 	return get_locomotion_state_name() == "Idle"
+
+
+func interaction_ray_is_hit() -> bool:
+	return _interaction_ray_hit
+
+
+func interaction_ray_from() -> Vector3:
+	return _interaction_ray_from
+
+
+func interaction_ray_to() -> Vector3:
+	return _interaction_ray_to
+
+
+func interaction_ray_hit_point() -> Vector3:
+	return _interaction_ray_hit_point
+
+
+func interaction_ray_collider_name() -> String:
+	return _interaction_ray_collider_name
+
+
+func interaction_ray_collider_layer() -> int:
+	return _interaction_ray_collider_layer
 
 
 ## XZ velocity for companion path prediction while the player is moving.
@@ -179,8 +292,8 @@ func _apply_gamepad_look(delta: float) -> void:
 	if look.length() <= LOOK_DEADZONE:
 		return
 
-	var scale := LOOK_SENSITIVITY * delta * cam_holder.mouse_sensibility * 100.0
-	cam_holder.rotate_from_vector(look * scale)
+	var look_scale := LOOK_SENSITIVITY * delta * cam_holder.mouse_sensibility * 100.0
+	cam_holder.rotate_from_vector(look * look_scale)
 
 
 func _poll_camera_zoom(delta: float) -> void:

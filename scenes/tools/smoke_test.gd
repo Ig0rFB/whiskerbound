@@ -2,7 +2,7 @@ extends SceneTree
 ## Headless smoke test — run with: bash scripts/run_smoke_test.sh
 
 const AREA_ID := "playground"
-const SPAWN_FEET := Vector2(51.0, 38.0)
+const SPAWN_FEET := Vector2(49.783, 39.947)
 const SOLID_MARKER_CELL := Vector2i(60, 40)
 
 const FEET_COLLIDER := Rect2(-0.25, -0.25, 0.5, 0.5)
@@ -61,7 +61,11 @@ func _initialize() -> void:
 	_test_companion_path(game_state.pathfinder, grid)
 	await _test_companion_follow(game_state.pathfinder, grid)
 	_test_dialogue_data()
-	_test_elder_cat_npc(game_state)
+	_test_bat_npc(game_state)
+	_test_npc_floor_height(game_state)
+	_test_interaction_ray_at_npc(game_state)
+	_test_interaction_ray_at_bat(game_state)
+	await _test_interaction_dialogue_at_gdbot(game_state)
 	_test_companion_visual(game_state)
 
 	print(
@@ -228,12 +232,168 @@ func _test_companion_moves_when_ahead_of_player(grid, astar) -> void:
 
 
 func _test_dialogue_data() -> void:
-	if DialogueDataScript.line_count(0) != 3:
-		push_error("Expected Elder Cat dialogue to have 3 lines")
+	if DialogueDataScript.line_count(0) != 1:
+		push_error("Expected Bat dialogue to have 1 line")
 		quit(1)
-	if DialogueDataScript.get_line(0, 0).is_empty():
-		push_error("Expected non-empty first Elder Cat line")
+	if DialogueDataScript.get_line(0, 0) != "Hello.":
+		push_error("Expected Bat first line to be Hello.")
 		quit(1)
+
+
+func _find_npc_by_id(game_state: Node, npc_id: String) -> Node3D:
+	for npc in game_state.npcs:
+		if npc != null and npc.get("npc_id") == npc_id:
+			return npc as Node3D
+	return null
+
+
+func _aim_camera_at(player: CharacterBody3D, aim_target: Vector3) -> void:
+	var cam_holder: Node3D = player.get("cam_holder") as Node3D
+	if cam_holder == null:
+		return
+	var flat_target := Vector3(aim_target.x, cam_holder.global_position.y, aim_target.z)
+	cam_holder.look_at(flat_target, Vector3.UP)
+	var flat_player := Vector3(aim_target.x, player.global_position.y, aim_target.z)
+	player.look_at(flat_player, Vector3.UP)
+
+
+func _test_bat_npc(game_state: Node) -> void:
+	if game_state.npcs.is_empty():
+		push_error("Expected at least one NPC in playground")
+		quit(1)
+
+	var bat := _find_npc_by_id(game_state, "bat")
+	if bat == null:
+		push_error("Expected Bat NPC in playground")
+		quit(1)
+
+	var player: CharacterBody3D = game_state.player
+	var player_at_npc := Vector2(bat.global_position.x, bat.global_position.z)
+	player.global_position = Vector3(player_at_npc.x, bat.global_position.y, player_at_npc.y)
+
+	var in_range := InteractionLogicScript.find_nearest_npc(player_at_npc, game_state.npcs)
+	if in_range != bat:
+		push_error("Expected Bat as nearest NPC when standing on same tile")
+		quit(1)
+
+	var active := InteractionLogicScript.find_npc_from_ray(bat, game_state.npcs)
+	if active != bat:
+		push_error("Expected Bat as ray interact target when collider is Bat body")
+		quit(1)
+
+	if not bat.has_node("Interactable"):
+		push_error("Expected Bat NPC to have Interactable child (reference pattern)")
+		quit(1)
+
+
+func _test_interaction_ray_at_npc(game_state: Node) -> void:
+	var player: CharacterBody3D = game_state.player
+	if player == null or not player.has_method("handle_interaction"):
+		push_error("Expected WhiskerboundPlayer for interaction ray test")
+		quit(1)
+
+	var ray: RayCast3D = player.get_node_or_null("%InteractionRaycast") as RayCast3D
+	if ray == null:
+		push_error("Expected %InteractionRaycast on player")
+		quit(1)
+
+	var gdbot := _find_npc_by_id(game_state, "gdbot")
+	if gdbot == null:
+		push_error("Expected GDBot NPC for interaction ray test")
+		quit(1)
+
+	var aim_target := gdbot.global_position + Vector3(0.0, 1.2, 0.0)
+	player.global_position = gdbot.global_position + Vector3(0.0, 0.0, 2.0)
+	player.global_position.y = gdbot.global_position.y
+	_aim_camera_at(player, aim_target)
+
+	await physics_frame
+	await physics_frame
+	player.call("handle_interaction")
+
+	if str(game_state.interact_target_name).is_empty():
+		push_error("Expected interact target when ray aimed at GDBot, got none")
+		quit(1)
+
+
+func _test_npc_floor_height(game_state: Node) -> void:
+	for npc in game_state.npcs:
+		if npc == null or not (npc is Node3D):
+			continue
+		var npc_y: float = (npc as Node3D).global_position.y
+		if npc_y < 3.5:
+			push_error("Expected NPC %s above floor, got y=%.2f" % [(npc as Node).name, npc_y])
+			quit(1)
+
+
+func _test_interaction_ray_at_bat(game_state: Node) -> void:
+	var player: CharacterBody3D = game_state.player
+	if player == null or not player.has_method("handle_interaction"):
+		push_error("Expected WhiskerboundPlayer for Bat ray test")
+		quit(1)
+
+	var bat: CharacterBody3D = _find_npc_by_id(game_state, "bat") as CharacterBody3D
+	if bat == null:
+		push_error("Expected Bat NPC for interaction ray test")
+		quit(1)
+
+	const CHARACTER_LAYER := 1
+	if bat.collision_layer != CHARACTER_LAYER:
+		push_error(
+			"Expected Bat on character layer %d, got layer %d"
+			% [CHARACTER_LAYER, bat.collision_layer]
+		)
+		quit(1)
+
+	var aim_target := bat.global_position + Vector3(0.0, 0.2, 0.0)
+	player.global_position = bat.global_position + Vector3(0.0, 0.0, 2.5)
+	player.global_position.y = bat.global_position.y
+	_aim_camera_at(player, aim_target)
+
+	await physics_frame
+	await physics_frame
+	player.call("handle_interaction")
+
+	if str(game_state.interact_target_name).is_empty():
+		push_error("Expected interact target when ray aimed at Bat, got none")
+		quit(1)
+
+	var ray: RayCast3D = player.get_node_or_null("%InteractionRaycast") as RayCast3D
+	ray.force_raycast_update()
+	if not ray.is_colliding():
+		push_error("Expected Bat ray hit when aimed at Bat")
+		quit(1)
+	var collider: Object = ray.get_collider()
+	if collider is CollisionObject3D:
+		var hit_layer: int = (collider as CollisionObject3D).collision_layer
+		if hit_layer != CHARACTER_LAYER:
+			push_error("Expected Bat ray hit on layer %d, got %d" % [CHARACTER_LAYER, hit_layer])
+			quit(1)
+
+
+func _test_interaction_dialogue_at_gdbot(game_state: Node) -> void:
+	var gdbot := _find_npc_by_id(game_state, "gdbot")
+	if gdbot == null:
+		push_error("Expected GDBot NPC for dialogue interact test")
+		quit(1)
+
+	var interactable: Node = gdbot.get_node_or_null("Interactable")
+	if interactable == null:
+		push_error("Expected GDBot Interactable child for dialogue test")
+		quit(1)
+
+	interactable.call("interact", game_state.player)
+	await process_frame
+
+	if game_state.mode != game_state.GameMode.DIALOGUE:
+		push_error("Expected DIALOGUE after interact at GDBot")
+		quit(1)
+	if game_state.dialogue_id != DialogueDataScript.dialogue_id_for_npc("gdbot"):
+		push_error("Expected GDBot dialogue id after interact")
+		quit(1)
+
+	game_state.mode = game_state.GameMode.GAMEPLAY
+	game_state.dialogue_id = -1
 
 
 func _test_companion_visual(game_state: Node) -> void:
@@ -279,17 +439,3 @@ func _test_companion_visual(game_state: Node) -> void:
 		push_error("Companion mesh missing StandardMaterial3D override")
 		quit(1)
 
-
-func _test_elder_cat_npc(game_state: Node) -> void:
-	if game_state.npcs.is_empty():
-		push_error("Expected at least one NPC in playground")
-		quit(1)
-
-	var player: CharacterBody3D = game_state.player
-	var elder = game_state.npcs[0]
-	var player_at_npc := Vector2(elder.global_position.x, elder.global_position.z)
-	player.global_position = Vector3(player_at_npc.x, elder.global_position.y, player_at_npc.y)
-
-	if InteractionLogicScript.find_nearest_npc(player_at_npc, game_state.npcs) == null:
-		push_error("Expected Elder Cat in interact range when player stands on same tile")
-		quit(1)

@@ -62,7 +62,7 @@ func _draw_left_panel() -> void:
 
 
 func _draw_right_panel() -> void:
-	var player: TpcPlayer = GameState.player
+	var player: CharacterBody3D = GameState.player
 	var grid: CollisionGrid = GameState.collision_grid
 	if player == null or grid == null:
 		return
@@ -94,7 +94,7 @@ func _draw_right_panel() -> void:
 
 
 func _player_debug_lines() -> PackedStringArray:
-	var player: TpcPlayer = GameState.player
+	var player: CharacterBody3D = GameState.player
 	if player == null or not is_instance_valid(player) or not player.is_inside_tree():
 		return PackedStringArray(["State: —"])
 
@@ -106,17 +106,67 @@ func _player_debug_lines() -> PackedStringArray:
 		"Speed: %.2f" % player.velocity.length(),
 		"On floor: %s" % str(player.is_on_floor()),
 		"Air jumps: %d" % player.nb_jumps_in_air_allowed,
+		"Interact: %s" % _interact_target_line(),
+		"Ray hit: %s" % _interaction_ray_hit_line(),
+		"Ray collider: %s" % _interaction_ray_collider_line(),
+		"Ray layer: %s" % _interaction_ray_layer_line(),
 	]
 
 	if "cam_holder" in player and player.cam_holder != null:
 		var cam = player.cam_holder
 		lines.append("Cam mode: %s" % ("aim" if cam.cam_aimed else "default"))
-		lines.append("Cam collision: %s" % _on_off(cam.cam_collision_enabled))
 		if "follow_cam_pos_when_aimed" in player:
 			var orient := "cam follower" if (cam.cam_aimed and player.follow_cam_pos_when_aimed) else "independent"
 			lines.append("Model facing: %s" % orient)
 
 	return lines
+
+
+func _interact_target_line() -> String:
+	if _interaction_ray_missing():
+		return "RAY MISSING"
+	if GameState.interact_target_name.is_empty():
+		return "None"
+	return GameState.interact_target_name
+
+
+func _interaction_ray_missing() -> bool:
+	return _get_interaction_ray() == null
+
+
+func _get_interaction_ray() -> RayCast3D:
+	var player: CharacterBody3D = GameState.player
+	if player == null:
+		return null
+	return player.get_node_or_null("%InteractionRaycast") as RayCast3D
+
+
+func _interaction_ray_hit_line() -> String:
+	var ray := _get_interaction_ray()
+	if ray == null:
+		return "RAY MISSING"
+	ray.force_raycast_update()
+	return "yes" if ray.is_colliding() else "no"
+
+
+func _interaction_ray_collider_line() -> String:
+	var ray := _get_interaction_ray()
+	if ray == null or not ray.is_colliding():
+		return "—"
+	var collider: Object = ray.get_collider()
+	if collider is Node:
+		return (collider as Node).name
+	return "—"
+
+
+func _interaction_ray_layer_line() -> String:
+	var ray := _get_interaction_ray()
+	if ray == null or not ray.is_colliding():
+		return "—"
+	var collider: Object = ray.get_collider()
+	if collider is CollisionObject3D:
+		return str((collider as CollisionObject3D).collision_layer)
+	return "—"
 
 
 func _shortcut_lines() -> PackedStringArray:

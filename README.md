@@ -1,8 +1,8 @@
 # Whiskerbound
 
-3D exploration and narrative adventure — Godot 4, third-person controller playground, cat companion follow.
+3D exploration and narrative adventure — Godot 4, GDQuest third-person playground, cat companion follow.
 
-**Status:** M5 next (area transitions) — see `PROJECT.md` §13. M3 companion autonomy in progress (idle wander, meows). M6 polish landed early: TPC playground, debug HUD, grounded actors.
+**Status:** M5 next (area transitions) — see `PROJECT.md` §13. M3 companion autonomy in progress (idle wander, meows). M6 polish landed early: playground, debug HUD, grounded companion.
 
 ## Quick start
 
@@ -30,7 +30,7 @@ bash scripts/run_companion_visual_test.sh
 | ★ (star) / H | Toggle debug HUD |
 | R / C / L | Restart / +companion / reload area *(debug HUD on)* |
 
-### Third-person player (Jeheno TPC)
+### Third-person player (GDQuest reference controller)
 
 | Input | Action |
 |-------|--------|
@@ -38,21 +38,21 @@ bash scripts/run_companion_visual_test.sh
 | Shift / **Y** | Run |
 | Space / A | Jump |
 | Mouse / right stick | Look |
-| Mouse wheel / V / B | Zoom in / out |
-| **L2 / R2** | Zoom out / in |
+| Mouse wheel / **=** / **−** | Zoom in / out |
+| Arrow keys | Pan camera |
 | RMB / R-shoulder | Aim camera |
-| G | Swap aim shoulder |
-| T | Toggle camera collision |
+| T | Swap aim shoulder |
 | Ctrl / L3 | Free / capture mouse |
+| F10 | Ragdoll *(debug)* |
 
 Connect an **8BitDo SN30 Pro** or **Switch Pro** via Bluetooth/USB. On Switch-layout pads, physical **A** confirms (talk); **Y** runs.
 
 ## Try it
 
-Boot into the **TPC playground** (Jeheno test map). Press **H** for the unified debug HUD (shortcuts, player state, position). Walk to the **Elder Cat** NPC — press **E** or **A** to talk.
+Boot into the **playground**. Walk to an NPC and **aim your crosshair at them** — the prompt “Press E or A to talk” appears at the bottom of the screen. Press **E** or gamepad **A** to open dialogue. Press **H** for the debug HUD (player state, position, ray hit).
 
 ## Stack
 
-Godot 4.7 · GDScript · Forward+ · [Jeheno Third-Person Controller](addons/JehenoThirdPersonController/)
+Godot 4.7 · GDScript · Forward+ · GDQuest `untitled-game` player (`scenes/player/gdquest/`, adapted via `whiskerbound_player.gd`)
 
-See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.0** (`GroundedCharacter`), **§9.1** (player physics via Jeheno TPC), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics).
+See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.1** (player), **§9.3** (NPC interaction), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics). Player/interaction source of truth: `reference/untitled-game/`.

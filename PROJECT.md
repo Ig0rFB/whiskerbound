@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M5 next (area transitions — see §13). **M3 companion autonomy** in progress (idle wander, activities, meows). M6 items landed early: TPC playground, unified debug HUD, grounded actors.  
+> **Status**: M5 next (area transitions — see §13). **M3 companion autonomy** in progress (idle wander, activities, meows). M6 items landed early: GDQuest playground, unified debug HUD, grounded companion.
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -32,7 +32,7 @@ Whiskerbound is an exploration-and-narrative-focused 3D adventure. The player co
 
 - Not voxel / Minecraft-style
 - Not pixel art / 2D sprites
-- Not first-person or free-orbit camera beyond the Jeheno TPC spring arm
+- Not first-person or free-orbit camera beyond the GDQuest orbit spring arm
 - Not combat-heavy
 - Not a general-purpose engine — use Godot as a game framework
 
@@ -45,7 +45,7 @@ A completed Odin/Raylib prototype exists in `whiskerbound-2d-prototype`. Reuse i
 | A* companion follow, repath, stuck teleport | **Active** — `core/companion/`, `AStarGrid2D` on XZ |
 | LDtk-style entity concepts (spawns, transitions, NPC markers) | **Active** — reimplemented as Godot markers |
 | Event-driven decoupling, milestone structure | **Active** |
-| Feet-only grid collision + wall sliding for **player** | **Replaced** — player uses Jeheno TPC `CharacterBody3D` physics (§4) |
+| Feet-only grid collision + wall sliding for **player** | **Replaced** — player uses GDQuest reference `CharacterBody3D` physics (§4, §9.1) |
 | 2D collision map as sole world collision | **Partial** — logic grid remains for companion pathfinding, minimap, debug; world blocking is 3D physics |
 
 ---
@@ -69,7 +69,7 @@ A completed Odin/Raylib prototype exists in `whiskerbound-2d-prototype`. Reuse i
 
 ### Mode (gameplay — M6)
 
-**Third-person spring-arm camera** via Jeheno TPC addon (`CameraHolder` + `SpringArm3D`). The player orbits the camera with mouse / right stick; scroll wheel, V/B keys, and **L2/R2** triggers adjust zoom.
+**Third-person orbit camera** via the GDQuest reference controller (`scenes/player/gdquest/Camera/orbit_view.tscn` — `SpringArm3D` + mouse / right stick). Zoom with mouse wheel or **=** / **−** keys; arrow keys pan the camera.
 
 Legacy **fixed-angle OOTS-style rig** (`scenes/camera/camera_rig.tscn`) remains for editor preview only — not used during gameplay.
 
@@ -82,16 +82,19 @@ Legacy **fixed-angle OOTS-style rig** (`scenes/camera/camera_rig.tscn`) remains 
 
 Map the 2D prototype convention (x, y tile coords) → 3D world (x, 0, z) where `z = tile_y`.
 
-### Grounded actors (M6 default)
+### Grounded actors
 
-All companions and NPCs extend `core/world/grounded_character.gd` (`CharacterBody3D`):
+**Companions** extend `core/world/grounded_character.gd` (`CharacterBody3D`):
 
-- Capsule collision aligned to feet (`Config.CHARACTER_*` / `COMPANION_*` / `NPC_*`)
-- Gravity + `move_and_slide()` + floor snap (same principle as the TPC player)
-- Collision layer **2** (characters), mask **1** (world CSG/mesh)
-- Player TPC also masks layer 2 so NPCs block movement
+- Capsule collision aligned to feet (`Config.COMPANION_*`)
+- Gravity + `move_and_slide()` + floor snap
+- Collision layer **2**, mask **world + characters** (see §4)
 
-New spawned characters should inherit this base unless a scene overrides body size. **Full implementation guide: §9.0.**
+**Playground NPCs** use the GDQuest reference pattern (`scenes/npc/reference_npc.gd` → `NPCBody.gd`): capsule on layer **1**, mask **2**, scene-placed Y (no `snap_to_floor`). See §9.3.
+
+**Village NPCs** (legacy) may still use `GroundedCharacter` until migrated.
+
+New spawned companions should inherit `GroundedCharacter` unless a scene overrides body size. **Full implementation guide: §9.0.**
 
 ### Legacy OOTS camera rig (editor only)
 
@@ -157,35 +160,41 @@ Whiskerbound uses a **dual-layer collision model**: 3D physics for actors agains
 
 **Who uses it:** player, companions, NPCs, static level geometry (CSG, `StaticBody3D`, mesh colliders).
 
-**Physics layers** (`config.gd`):
+**Physics layers** — `config.gd` names bits for `GroundedCharacter` and village areas; the **playground** follows `reference/untitled-game` bit assignment so interaction raycasts match the reference:
 
-| Layer | Bit | Contents |
-|---|---|---|
-| World | 1 | Playground CSG, static meshes, terrain |
-| Character | 2 | Player, companions, NPCs |
+| Bit | `config.gd` constant | Playground (reference) | Village / legacy |
+|---|---|---|---|
+| 1 | `COLLISION_LAYER_WORLD` | **NPC bodies** | World floor |
+| 2 | `COLLISION_LAYER_CHARACTER` | **World CSG / ground** | Player, companion, NPCs |
 
-**Player — Jeheno third-person controller** (`addons/JehenoThirdPersonController/`, adapted via `scenes/player/tpc_player.gd`):
+When adding geometry or actors to **playground**, use the playground column. When using `GroundedCharacter` defaults in other areas, use the config constants.
 
-- Root: `CharacterBody3D` with capsule collider (~radius 0.35, height ~1.7 — tuned in addon scene)
-- **Gravity:** separate jump and fall curves (`jump_gravity`, `fall_gravity`) applied when not on floor
-- **Movement:** state machine (idle / walk / run / jump / in-air) sets horizontal velocity; `move_and_slide()` each physics frame
-- **Floor detection:** `is_on_floor()`, `floor_snap_length` (1.0 on ground states, 0 in jump), coyote-time jump buffer
-- **Walls:** optional velocity cut on wall hit (`hit_wall_cut_velocity`); spring-arm camera collision against layer 1
-- **Whiskerbound adapter:** exposes `feet_velocity` for companion AI; masks layers 1 **and** 2 so NPCs block the player; disables addon HUD; handles wheel/L2/R2 zoom
+**Player — GDQuest reference controller** (`scenes/player/gdquest/`, adapter `scenes/player/whiskerbound_player.gd`):
 
-This is the reference implementation for “good” 3D collision — companions and NPCs mirror its pattern via `GroundedCharacter` (§9.0), not via grid sampling.
+- Scene: `scenes/player/player.tscn` instances `gdquest/PlayerCharacterScene.tscn`
+- Root: `CharacterBody3D` with capsule; state machine (idle / walk / run / jump / in-air / ragdoll)
+- **Movement:** `move_forward` / `move_backward` / `move_left` / `move_right` input actions; gravity curves; coyote-time jump buffer
+- **Camera:** `OrbitView` spring arm; zoom via `zoom_in` / `zoom_out`
+- **Whiskerbound adapter (`WhiskerboundPlayer`):** `feet_velocity` for companion AI; `GameState` / `Events` hooks; interaction ray with companion exceptions; debug stats panel toggled with **H** (prompt is separate — see §9.3)
+- **Source of truth:** `reference/untitled-game/Player/` — copy/adapt, do not reimplement from Jeheno
 
-**Companions & NPCs — `GroundedCharacter`:**
+**Companions — `GroundedCharacter`:**
 
-- Same engine primitives: `CharacterBody3D`, capsule, `apply_gravity()`, `move_and_slide()`, `snap_to_floor()`
-- Companions: horizontal velocity from A* follow; Y from physics
-- NPCs: static XZ, gravity keeps them on slopes/platforms
+- `CharacterBody3D`, capsule, `apply_gravity()`, `move_and_slide()`, `snap_to_floor()`
+- Playground scene: layer **2**, mask **3** (world + characters on reference bits)
+- Horizontal velocity from A* follow; Y from physics
 
-**Level geometry:** Jeheno playground map (`Map/test_map_scene.tscn`) uses CSG with collision on layer 1. New areas should follow the same rule: world colliders on layer 1, characters on layer 2.
+**Playground NPCs — reference `NPCBody`:**
+
+- `scenes/npc/npc.tscn` + `reference_npc.gd`; layer **1**, mask **2**
+- Floating NPCs (Bat): `motion_type = FLOATING` on `NPCBody`
+- Placed at designer Y in the scene — **no** `snap_to_floor`
+
+**Level geometry (playground):** `scenes/areas/playground.tscn` CSG and ground use collision layer **2**, mask **2** (matches reference `TestMapScene`).
 
 ### Layer 2 — Logic grid (companion AI & overlays)
 
-**Who uses it:** companion pathfinding, minimap walkability tint, collision debug overlay, smoke tests. **Not** the player's primary collision in the TPC playground.
+**Who uses it:** companion pathfinding, minimap walkability tint, collision debug overlay, smoke tests. **Not** the player's primary collision in the playground.
 
 **Implementation:** `core/world/collision_grid.gd` — 2D `width × height` solid/walkable flags on the XZ plane (`GRID_CELL := 1.0`).
 
@@ -208,7 +217,7 @@ This is the reference implementation for “good” 3D collision — companions 
 
 | Aspect | Implementation |
 |---|---|
-| Input | WASD / left stick via Jeheno input actions; run (Shift/Y), jump (Space/A) |
+| Input | WASD / left stick via `move_forward` etc.; run (Shift/Y), jump (Space/A) |
 | Speed | Walk ~5 u/s, run ~9 u/s (addon defaults); `Config.PLAYER_SPEED` used for companion prediction |
 | Facing | Model rotates toward move direction or camera (aim mode) |
 | Vertical | Full jump arc — not Y-locked |
@@ -329,7 +338,7 @@ whiskerbound/
 │   ├── camera/                  # camera_debug_info.gd
 │   ├── companion/               # companion_logic, companion_idle_logic, companion_data, …
 │   ├── dialogue/                # dialogue_data.gd
-│   ├── interaction/             # interaction.gd
+│   ├── interaction/             # interaction.gd, interactable.gd
 │   ├── movement/                # movement.gd, player_collider.gd
 │   ├── pathfinding/             # pathfinding.gd (AStarGrid2D on XZ)
 │   ├── render/                  # depth_sort.gd
@@ -338,16 +347,16 @@ whiskerbound/
 │   └── world/                   # collision_grid.gd, grounded_character.gd (§9.0)
 ├── input/
 │   ├── input_actions.gd         # keyboard + gamepad → actions each frame
-│   └── gamepad.gd               # deadzone, confirm/cancel layout, L2/R2 zoom
+│   └── gamepad.gd               # deadzone, confirm/cancel layout
 ├── scenes/
 │   ├── main.tscn / main.gd / area_manager.gd
 │   ├── areas/                   # playground (default), village_green (legacy grid)
 │   ├── camera/                  # camera_rig (legacy OOTS, editor only), camera_preview
 │   ├── companion/               # companion.gd/.tscn
 │   ├── debug/                   # collision_debug, companion_path_debug
-│   ├── npc/                     # npc.gd/.tscn
-│   ├── player/                  # player.tscn (Jeheno TPC instance), tpc_player.gd
-│   └── tools/                   # smoke_test, companion_visual_test, tpc_sandbox
+│   ├── npc/                     # npc.tscn, reference_npc.gd, reference/
+│   ├── player/                  # player.tscn, whiskerbound_player.gd, gdquest/
+│   └── tools/                   # smoke_test, companion_visual_test
 ├── ui/
 │   ├── game_ui.tscn/.gd         # orchestrates HUD, pause, dialogue
 │   ├── debug_hud.gd             # unified debug overlay (H)
@@ -356,10 +365,10 @@ whiskerbound/
 │   ├── dialogue_box.gd/.tscn
 │   ├── interact_prompt.gd/.tscn
 │   └── companion_bark.gd/.tscn  # meow speech bubble
-├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh, tpc sandbox runners
-├── assets/                      # audio, fonts, materials, models (cat.glb, adventurer GLBs)
-├── addons/                      # JehenoThirdPersonController, anthonyec.camera_preview
-└── reference/                   # local clone of whiskerbound-2d-prototype (not in git)
+├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh
+├── assets/                      # audio, fonts, materials, models (see assets/ASSETS.md)
+├── addons/                      # GDQuest character packs, anthonyec.camera_preview; Jeheno (legacy, unused at runtime)
+└── reference/                   # whiskerbound-2d-prototype, untitled-game (player/NPC interaction source)
 ```
 
 Planned but not yet created: `data/` (dialogue and area resources once content outgrows hardcoding), `scenes/areas/forest_path.tscn` (M5), `.github/workflows/ci.yml`. Add them when the milestone demands, not before.
@@ -371,9 +380,10 @@ Planned but not yet created: `data/` (dialogue and area resources once content o
 **Current model (as implemented)**: updates are distributed across scene scripts, gated by `GameState.mode`:
 
 - `input/input_actions.gd` polls hardware into abstract actions each frame
-- `scenes/player/tpc_player.gd` handles player physics via the Jeheno state machine
-- `scenes/companion/companion.gd` and `scenes/npc/npc.gd` run their own `_physics_process`, delegating decisions to `core/companion/companion_logic.gd` etc.
-- `ui/game_ui.gd` orchestrates HUD, pause, and dialogue
+- `scenes/player/whiskerbound_player.gd` handles player physics via the GDQuest state machine; `handle_interaction()` runs each physics frame in gameplay
+- `scenes/companion/companion.gd` runs its own `_physics_process`, delegating to `core/companion/companion_logic.gd`
+- Playground NPCs use `scenes/npc/reference_npc.gd` (reference `NPCBody` physics)
+- `ui/game_ui.gd` orchestrates HUD, pause, dialogue; listens to `Events.interactable_triggered` and `Events.interact_target_changed`
 - Mode gating: gameplay scripts early-return unless `GameState.mode == GameMode.GAMEPLAY`; dialogue and pause suppress movement input
 
 **Rules that keep this manageable**:
@@ -392,7 +402,7 @@ A central system dispatcher (MovementSystem, CompanionSystem, ...) was the origi
 
 **File:** `core/world/grounded_character.gd` (`class_name GroundedCharacter`)
 
-Default `CharacterBody3D` for any actor that should stand on 3D world geometry (CSG, static meshes), fall with gravity, and block or be blocked by the environment. Companions and NPCs extend this; the **player** uses the Jeheno TPC controller (`CharacterBody3D` with its own capsule) but follows the same physics idea: `move_and_slide()`, `is_on_floor()`, floor snap.
+Default `CharacterBody3D` for **companions** (and legacy village NPCs) that should stand on 3D world geometry, fall with gravity, and block or be blocked by the environment. **Playground NPCs** use reference `NPCBody` instead (§9.3). The **player** uses the GDQuest reference controller (§9.1).
 
 #### What the base provides
 
@@ -424,7 +434,7 @@ MyActor (CharacterBody3D)          ← script extends grounded_character.gd
 
 - Root transform **feet at origin**: place the node at `(x, y, z)` where `y` is eventually resolved by physics (spawn high, `snap_to_floor()` finds the floor).
 - Do **not** put gameplay logic on `Visual` — collision lives on the root body.
-- World geometry must be on collision **layer 1**.
+- World geometry must be on the correct collision layer for the area (playground: layer **2** — §4).
 
 #### Script template
 
@@ -452,7 +462,8 @@ func _physics_process(delta: float) -> void:
 | Actor | Pattern | File |
 |---|---|---|
 | **Moving** (companion) | A* sets target feet on XZ → `_apply_horizontal_velocity()` → `apply_gravity()` → `move_and_slide()` | `scenes/companion/companion.gd` |
-| **Static** (NPC) | `velocity.x/z = 0` each frame → `apply_gravity()` → `move_and_slide()` (stays on slopes/platforms) | `scenes/npc/npc.gd` |
+| **Static** (legacy NPC) | `velocity.x/z = 0` each frame → `apply_gravity()` → `move_and_slide()` | `scenes/npc/npc.gd` (village only) |
+| **Playground NPC** | Reference `NPCBody` — scene Y, optional floating motion | `scenes/npc/reference_npc.gd` |
 
 **Spawn from code** (e.g. `area_manager.gd`):
 
@@ -472,7 +483,7 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 5. In `_physics_process`: set horizontal velocity (if any), then `apply_gravity(delta)` and `move_and_slide()`.
 6. On programmatic spawn: set XZ position, then `call_deferred("snap_to_floor")`.
 7. Register with game systems as needed (`add_to_group("npcs")`, `GameState.companions`, etc.).
-8. Player must mask layer 2 to collide with NPCs — already set in `scenes/player/tpc_player.gd`.
+8. Playground NPCs: use `scenes/npc/npc.tscn` + `reference_npc.gd` — layer **1**, mask **2** (§4).
 
 #### Do not
 
@@ -484,16 +495,19 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 
 ### 9.1 Player
 
-- Spawn at `PlayerSpawn` marker in current area
-- **Jeheno third-person controller** — scene: `addons/.../player_character_scene.tscn`, adapter: `scenes/player/tpc_player.gd`
-- **Physics (from addon, do not reimplement):**
-  - `CharacterBody3D` + capsule on layer 2
-  - State machine: idle, walk, run, jump, in-air — each applies gravity and calls `move_and_slide()`
+- Spawn at `PlayerSpawn` marker (or `Actors/Player` in editor-authored playground)
+- **GDQuest reference controller** — copied to `scenes/player/gdquest/`; runtime entry: `scenes/player/player.tscn` + `whiskerbound_player.gd` (`class_name WhiskerboundPlayer`)
+- **Physics (from reference, adapt via `WhiskerboundPlayer` only):**
+  - `CharacterBody3D` + capsule; state machine: idle, walk, run, jump, in-air, ragdoll
   - Jump: configurable height/time-to-peak; coyote time; air jumps; jump buffer
-  - Ground states set `floor_snap_length = 1.0` so the body sticks to ramps and platforms
-  - Debug HUD reads `is_on_floor()`, state name, air jumps — use these when tuning levels
-- **Whiskerbound hooks:** `feet_velocity` (XZ) for companion AI; collision mask includes layer 2 (NPCs); spring-arm camera bound to `GameState.camera_rig`; addon HUD hidden
-- **Do not** port 2D grid wall-slide to the player — extend the Jeheno controller or adjust capsule/spring arm instead
+  - `move_and_slide()` each physics frame; gameplay gated by `GameState.mode`
+- **Interaction** (`handle_interaction()` each physics frame):
+  - `InteractionRaycast` on `VisualRoot` (chest height), `collision_mask = 3`
+  - Ray basis aligned to active camera; `force_raycast_update()` before query
+  - Hit collider (or parent) with `Interactable` child → show prompt; **E** calls `interact(user)`
+- **Whiskerbound hooks:** `feet_velocity` (XZ) for companion AI; `GameState.camera_rig` = `OrbitView`; reference debug stats hidden unless **H**; companion bodies excluded from interaction ray
+- **Do not** edit scripts under `scenes/player/gdquest/` in place — fix in `whiskerbound_player.gd` or re-copy from `reference/untitled-game/`
+- **Legacy:** `addons/JehenoThirdPersonController/` and `scenes/player/tpc_player.gd` are **not** used at runtime
 
 ### 9.2 Cat companion (Lumi)
 
@@ -525,12 +539,28 @@ Animation names are tunables in `config.gd` (`COMPANION_ANIM_SIT`, etc.). Only `
 
 ### 9.3 NPC interaction
 
-- NPCs extend **GroundedCharacter** (§9.0) — static capsule blocks player
-- Scene markers with fields: `npc_id`, `dialogue_id`, `display_name`
-- Interact when player within `INTERACT_RADIUS` and presses Interact action (**E** keyboard, **A** gamepad)
-- Opens dialogue UI; pauses gameplay input
-- Advance line / dismiss with Confirm / Cancel
-- Face player toward NPC when dialogue opens (rotate model on Y axis)
+**Playground NPCs** (`scenes/npc/npc.tscn`):
+
+- Root: `CharacterBody3D` + `reference_npc.gd` (extends reference `NPCBody.gd`)
+- `collision_layer = 1`, `collision_mask = 2`; capsule at Y = 1
+- Child `Interactable` node (`npc_interactable.gd` extends `core/interaction/interactable.gd`)
+- GDQuest skin scenes instanced as visual children (no gameplay on skins)
+- Exported: `npc_id`, `dialogue_id`, `display_name`; auto-resolves dialogue from `DialogueData`
+
+**Targeting (reference pattern — aim, not proximity):**
+
+1. Each physics frame, `WhiskerboundPlayer.handle_interaction()` aligns `%InteractionRaycast` to the camera and tests layer mask **3**
+2. On hit, walk up the scene tree to find an owner with an `Interactable` child
+3. `Events.interact_target_changed` → `ui/interact_prompt.tscn` shows “Press E or A to talk”
+4. On **E** / gamepad **A**, `Interactable.interact(player)` → `Events.interactable_triggered` → `game_ui.gd` opens dialogue
+
+**Dialogue:**
+
+- Opens dialogue UI; pauses camera input
+- Advance line / dismiss with **E** / **A**
+- Player model rotates toward NPC (`face_toward_world` on `visual_root`)
+
+**Source of truth:** `reference/untitled-game/Player/StateMachine/player_character_script.gd` (`handle_interaction`), `reference/untitled-game/NPCs/BaseNPC.tscn`
 
 ### 9.4 Dialogue
 
@@ -595,7 +625,8 @@ Canonical mapping lives in `input/input_actions.gd` and Project → Input Map; t
 | Run | Shift | Y |
 | Jump | Space | A |
 | Look / orbit camera | Mouse | Right stick |
-| Zoom | Wheel / V / B | L2 / R2 |
+| Zoom | Wheel / **=** / **−** | — |
+| Free mouse | Ctrl | L3 |
 | Interact / advance dialogue | E | A (Switch-layout physical A) |
 | Pause | Esc | Start |
 | Toggle minimap | M | Select (−) |
@@ -609,7 +640,7 @@ Canonical mapping lives in `input/input_actions.gd` and Project → Input Map; t
 ## 12. UI
 
 - **Dialogue box**: bottom third, speaker name, portrait placeholder, line text
-- **HUD**: minimal — interact prompt when in range ("Press E or A to talk")
+- **HUD**: interact prompt when raycast targets an NPC (`ui/interact_prompt.tscn` via `Events.interact_target_changed`)
 - **Minimap**: top-right, 2D overhead of area collision grid + player dot (toggle M)
 - **Pause menu**: resume, quit
 - **Debug HUD** (M6): FPS, collision overlay toggle (H), entity picker (stretch)
@@ -622,7 +653,7 @@ All UI in `CanvasLayer`. UI logic scripts must not manipulate 3D scene directly.
 
 Build in order. Each milestone = playable build.
 
-**Status note**: several M6 items were completed early during the TPC migration (playground, debug HUD, grounded actors). **M5 remains the next milestone** — do not start remaining M6 items until M5's checklist is complete and its exit criteria pass. This section is the single source of truth for milestone status; `README.md` and `AGENTS.md` must point here rather than duplicate it.
+**Status note**: several M6 items were completed early during the playground migration (GDQuest player, debug HUD, grounded companion). **M5 remains the next milestone** — do not start remaining M6 items until M5's checklist is complete and its exit criteria pass. This section is the single source of truth for milestone status; `README.md` and `AGENTS.md` must point here rather than duplicate it.
 
 ### M1: Window + 3D area + camera
 
@@ -653,7 +684,7 @@ Build in order. Each milestone = playable build.
 - [x] Elder Cat NPC in village area
 - [x] Interact → dialogue box with 3 hardcoded lines
 - [x] Advance / dismiss; gameplay input blocked during dialogue
-- [x] Interact prompt when near NPC (early — full polish in M6)
+- [x] Interact prompt when raycast targets NPC (aim at them)
 - [x] Player faces NPC when dialogue opens (early — M6)
 
 ### M5: Area transitions
@@ -664,9 +695,9 @@ Build in order. Each milestone = playable build.
 
 ### M6: Mechanics polish
 
-- [x] TPC playground as default dev area
+- [x] Playground as default dev area (GDQuest map + five NPCs)
 - [x] Unified debug HUD (H toggle, shortcuts, player state)
-- [x] Grounded companions + NPCs (`GroundedCharacter`)
+- [x] Grounded companion (`GroundedCharacter`); playground NPCs use reference `NPCBody`
 - [ ] Walk all paths without snagging (manual checklist)
 - [ ] Camera clamp at area edges
 - [x] Interact prompt UI (E / A)
@@ -689,7 +720,7 @@ Build in order. Each milestone = playable build.
 
 | Entity | Placeholder | Colour |
 |---|---|---|
-| Player | Jeheno Godot plush (addon GLB) | Addon texture |
+| Player | GDQuest Godot plush (`scenes/player/gdquest/`) | Reference texture |
 | Lumi (companion) | `cat.glb` under `Visual/Model` | Cream `#F5E6C8` |
 | NPC cat | BoxMesh rounded 0.5×0.7 | Grey-lavender `#9B8FA8` |
 | Ground | PlaneMesh or BoxMesh 1×0.1×1 tiles | Moss `#7CB87C` |
@@ -707,8 +738,8 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 Coding standards, workflow, and definition of done live in **`AGENTS.md`** — read it first. Project-specific notes:
 
 1. **Implement milestones in order** per §13. Official next: **M5** (area transitions). **M3 companion autonomy** may proceed in parallel — core logic in `core/companion/`, scene wiring in `scenes/companion/`.
-2. **Match 2D prototype feel** for companion follow pacing and interact radius — reference `reference/whiskerbound-2d-prototype` when tuning. Player movement is governed by Jeheno TPC physics (§4), not grid wall-slide.
-3. **No pixel art, no voxels, no free-orbit camera changes** beyond what the Jeheno TPC already provides.
+2. **Match 2D prototype feel** for companion follow pacing — reference `reference/whiskerbound-2d-prototype` when tuning. Player movement is governed by GDQuest reference physics (§4, §9.1), not grid wall-slide.
+3. **No pixel art, no voxels, no free-orbit camera changes** beyond what the reference orbit camera provides.
 4. **After each milestone**: update §13 checkboxes and the Status header, update `README.md` status line, run `bash scripts/run_smoke_test.sh`, commit as `M5: area transitions with fade`.
 5. Target: Godot 4.7, macOS Apple Silicon, 60 FPS on placeholder assets.
 
@@ -736,7 +767,7 @@ Walk away from Lumi in-game — she follows and stops ~1.25 units away. Stand st
 
 ### Verification (M4)
 
-Elder Cat stands in the TPC playground near spawn. Walk nearby — "Press E or A to talk" appears. Press **E** or gamepad **A** to advance three lines; again to close. Movement is blocked while the dialogue box is open.
+Bat NPC floats near spawn in the playground. Walk nearby — "Press E or A to talk" appears. Press **E** or gamepad **A** to hear "Hello."; again to close. Movement is blocked while the dialogue box is open.
 
 ---
 

@@ -17,7 +17,7 @@ const COLLISION_DEBUG_SCENE := preload("res://scenes/debug/collision_debug.tscn"
 const COMPANION_PATH_DEBUG_SCENE := preload("res://scenes/debug/companion_path_debug.tscn")
 
 var area: Node3D = null
-var player: TpcPlayer = null
+var player: WhiskerboundPlayer = null
 var companions: Array[Node3D] = []
 var collision_debug: Node3D = null
 var companion_path_debug: Node3D = null
@@ -200,14 +200,16 @@ func _spawn_player(spawn_pos: Vector3) -> void:
 	player.global_position = spawn_pos
 	if player.has_method("_bind_camera_to_game_state"):
 		player.call_deferred("_bind_camera_to_game_state")
+	if player.has_method("_bind_interaction_ray_exceptions"):
+		player.call_deferred("_bind_interaction_ray_exceptions")
 
 
 func _try_adopt_player(area_node: Node3D) -> bool:
-	var scene_player: TpcPlayer = null
+	var scene_player: WhiskerboundPlayer = null
 	if area_node.has_method("get_scene_player"):
 		scene_player = area_node.get_scene_player()
 	elif area_node.has_node("Actors/Player"):
-		scene_player = area_node.get_node("Actors/Player") as TpcPlayer
+		scene_player = area_node.get_node("Actors/Player") as WhiskerboundPlayer
 	if scene_player == null:
 		return false
 
@@ -215,6 +217,8 @@ func _try_adopt_player(area_node: Node3D) -> bool:
 	player.reparent(_world_root)
 	if player.has_method("_bind_camera_to_game_state"):
 		player.call_deferred("_bind_camera_to_game_state")
+	if player.has_method("_bind_interaction_ray_exceptions"):
+		player.call_deferred("_bind_interaction_ray_exceptions")
 	return true
 
 
@@ -337,6 +341,8 @@ func _player_camera_rig() -> Node3D:
 func _sync_companion_state() -> void:
 	GameState.companions = companions
 	GameState.companion = companions[0] if companions.size() > 0 else null
+	if player != null and player.has_method("_bind_interaction_ray_exceptions"):
+		player.call_deferred("_bind_interaction_ray_exceptions")
 
 
 func _reset_dialogue_state() -> void:

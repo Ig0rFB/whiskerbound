@@ -1,7 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://b7player000001"]
+[gd_scene load_steps=3 format=3 uid="uid://b7player000001"]
 
-[ext_resource type="PackedScene" uid="uid://bgkmxyw21pc1m" path="res://addons/JehenoThirdPersonController/PlayerCharacter/player_character_scene.tscn" id="1_tpc"]
-[ext_resource type="Script" path="res://scenes/player/tpc_player.gd" id="2_adapter"]
+[ext_resource type="PackedScene" uid="uid://bgkmxyw21pc1m" path="res://scenes/player/gdquest/PlayerCharacterScene.tscn" id="1_ref"]
+[ext_resource type="Script" path="res://scenes/player/whiskerbound_player.gd" id="2_adapter"]
 
-[node name="PlayerCharacter" instance=ExtResource("1_tpc")]
+[node name="Player" instance=ExtResource("1_ref")]
 script = ExtResource("2_adapter")

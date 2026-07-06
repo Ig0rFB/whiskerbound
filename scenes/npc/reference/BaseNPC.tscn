@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://npcbase12345"]
+
+[ext_resource type="Script" path="res://scenes/npc/reference/NPCBody.gd" id="1_npcbody"]
+[ext_resource type="Script" path="res://core/interaction/interactable.gd" id="2_interactable"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_12345"]
+
+[node name="BaseNPC" type="CharacterBody3D"]
+collision_layer = 1
+collision_mask = 2
+script = ExtResource("1_npcbody")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_12345")
+
+[node name="Interactable" type="Node" parent="."]
+script = ExtResource("2_interactable")

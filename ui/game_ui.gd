@@ -14,7 +14,10 @@ func _ready() -> void:
 	_pause_menu.save_game_requested.connect(_on_pause_save_game)
 	_pause_menu.load_game_requested.connect(_on_pause_load_game)
 	GameSettings.settings_changed.connect(_layout_minimap)
+	Events.interact_target_changed.connect(_on_interact_target_changed)
+	Events.interactable_triggered.connect(_on_interactable_triggered)
 	_layout_minimap()
+	_interact_prompt.set_show_prompt(false)
 
 
 func _physics_process(_delta: float) -> void:
@@ -26,12 +29,7 @@ func _physics_process(_delta: float) -> void:
 	_handle_debug_shortcuts()
 
 	match GameState.mode:
-		GameState.GameMode.GAMEPLAY:
-			_update_interact_prompt()
-			if InputActions.interact_pressed:
-				_try_begin_dialogue()
 		GameState.GameMode.DIALOGUE:
-			_interact_prompt.set_show_prompt(false)
 			if InputActions.interact_pressed:
 				_advance_dialogue()
 
@@ -126,30 +124,26 @@ func _on_pause_load_game() -> void:
 		_pause_menu.set_status_message("Load failed.")
 
 
-func _update_interact_prompt() -> void:
-	var player: CharacterBody3D = GameState.player
-	if player == null or not is_instance_valid(player) or not player.is_inside_tree():
+func _on_interact_target_changed(target_name: String) -> void:
+	if GameState.mode != GameState.GameMode.GAMEPLAY:
 		_interact_prompt.set_show_prompt(false)
 		return
-	var feet := Vector2(player.global_position.x, player.global_position.z)
-	var near := InteractionLogic.player_near_npc(feet, GameState.npcs)
-	_interact_prompt.set_show_prompt(near)
+	_interact_prompt.set_show_prompt(not target_name.is_empty())
 
 
-func _try_begin_dialogue() -> void:
-	var player: CharacterBody3D = GameState.player
-	if player == null:
+func _on_interactable_triggered(owner: Node) -> void:
+	if GameState.mode != GameState.GameMode.GAMEPLAY:
 		return
-	var feet := Vector2(player.global_position.x, player.global_position.z)
-	var npc: Node3D = InteractionLogic.find_nearest_npc(feet, GameState.npcs)
-	if npc == null:
+	if owner == null or not is_instance_valid(owner):
 		return
-	_begin_dialogue(npc)
+	if not owner.is_in_group("npcs"):
+		return
+	_begin_dialogue(owner as Node3D)
 
 
 func _begin_dialogue(npc: Node3D) -> void:
 	_set_player_camera_input(false)
-	var dialogue_id: int = npc.dialogue_id
+	var dialogue_id: int = _resolve_dialogue_id(npc)
 	if dialogue_id < 0 or DialogueData.line_count(dialogue_id) == 0:
 		return
 
@@ -157,6 +151,7 @@ func _begin_dialogue(npc: Node3D) -> void:
 	GameState.dialogue_npc = npc
 	GameState.dialogue_id = dialogue_id
 	GameState.dialogue_line = 0
+	_interact_prompt.set_show_prompt(false)
 
 	if GameState.player != null and GameState.player.has_method("face_toward_world"):
 		GameState.player.face_toward_world(
@@ -196,6 +191,16 @@ func _end_dialogue() -> void:
 	_dialogue_box.hide_dialogue()
 	Events.dialogue_ended.emit()
 	_set_player_camera_input(true)
+
+
+func _resolve_dialogue_id(npc: Node) -> int:
+	var raw_id: Variant = npc.get("dialogue_id")
+	var dialogue_id: int = int(raw_id) if raw_id != null else -1
+	if dialogue_id < 0:
+		var npc_id: Variant = npc.get("npc_id")
+		if npc_id != null and str(npc_id) != "":
+			dialogue_id = DialogueData.dialogue_id_for_npc(str(npc_id))
+	return dialogue_id
 
 
 func _set_player_camera_input(enabled: bool) -> void:

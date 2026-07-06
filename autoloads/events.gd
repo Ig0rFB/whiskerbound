@@ -14,3 +14,5 @@ signal debug_restart_requested
 signal debug_reload_area_requested
 signal debug_spawn_companion_requested
 signal companion_barked(companion: Node3D, text: String)
+signal interact_target_changed(target_name: String)
+signal interactable_triggered(owner: Node)

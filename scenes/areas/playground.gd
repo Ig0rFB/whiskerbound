@@ -20,8 +20,8 @@ func get_player_spawn_global() -> Vector3:
 	return global_position
 
 
-func get_scene_player() -> TpcPlayer:
-	return get_node_or_null("Actors/Player") as TpcPlayer
+func get_scene_player() -> WhiskerboundPlayer:
+	return get_node_or_null("Actors/Player") as WhiskerboundPlayer
 
 
 func get_scene_companions() -> Array[Node3D]:
