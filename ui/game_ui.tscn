@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://ui/minimap.gd" id="4_minimap"]
 [ext_resource type="Script" path="res://ui/debug_hud.gd" id="5_debug"]
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="6_pause"]
+[ext_resource type="PackedScene" uid="uid://c7companionbark" path="res://ui/companion_bark.tscn" id="7_bark"]
 
 [node name="GameUI" type="CanvasLayer"]
 script = ExtResource("1_ui")
@@ -13,6 +14,8 @@ script = ExtResource("1_ui")
 [node name="DialogueBox" parent="." instance=ExtResource("2_dialogue")]
 
 [node name="InteractPrompt" parent="." instance=ExtResource("3_prompt")]
+
+[node name="CompanionBark" parent="." instance=ExtResource("7_bark")]
 
 [node name="Minimap" type="Control" parent="."]
 layout_mode = 3

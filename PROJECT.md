@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M5 next (area transitions — see §13, the single source of truth for milestone status). Several M6 polish items landed early: TPC playground, grounded actors, unified debug HUD.  
+> **Status**: M5 next (area transitions — see §13). **M3 companion autonomy** in progress (idle wander, activities, meows). M6 items landed early: TPC playground, unified debug HUD, grounded actors.  
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -327,7 +327,7 @@ whiskerbound/
 ├── core/                        # logic layer — see §6.1 rules
 │   ├── types.gd                 # Direction8, shared enums
 │   ├── camera/                  # camera_debug_info.gd
-│   ├── companion/               # companion_logic.gd, companion_data.gd, companion_collider.gd
+│   ├── companion/               # companion_logic, companion_idle_logic, companion_data, …
 │   ├── dialogue/                # dialogue_data.gd
 │   ├── interaction/             # interaction.gd
 │   ├── movement/                # movement.gd, player_collider.gd
@@ -354,7 +354,8 @@ whiskerbound/
 │   ├── minimap.gd
 │   ├── pause_menu.gd/.tscn
 │   ├── dialogue_box.gd/.tscn
-│   └── interact_prompt.gd/.tscn
+│   ├── interact_prompt.gd/.tscn
+│   └── companion_bark.gd/.tscn  # meow speech bubble
 ├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh, tpc sandbox runners
 ├── assets/                      # audio, fonts, materials, models (cat.glb, adventurer GLBs)
 ├── addons/                      # JehenoThirdPersonController, anthonyec.camera_preview
@@ -501,8 +502,24 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 - Stops within `COMPANION_FOLLOW_DISTANCE`
 - Repath every `COMPANION_REPATH_INTERVAL` s; stuck teleport fallback after `COMPANION_STUCK_SECONDS`
 - Horizontal motion from `CompanionLogic`; vertical motion from physics (not manual Y raycasts)
-- Placeholder / GLB cat mesh under `Visual/Model`
-- Idle behaviour: occasional pause + look-around (timer-based, M3+)
+- `cat.glb` mesh under `Visual/Model`; editor floor snap via raycast (place X/Z only in area scenes)
+
+**Follow vs autonomous (M3 extension — in progress)**
+
+| Mode | When | Logic |
+|---|---|---|
+| **Follow** | Player moving, or companion far from player | `CompanionLogic` — A* toward predicted player feet |
+| **Autonomous** | Player idle ≥ `COMPANION_IDLE_ENTER_SECONDS` and companion within wander radius | `CompanionIdleLogic` — wander, sit, play, groom |
+
+Autonomous activities (timer-based state machine in `core/companion/`):
+
+- **Wander** — random clear cell near player (`COMPANION_WANDER_RADIUS`), A* path
+- **Sit / play / groom** — hold position; play named clip when present in `cat.glb`
+- **Meow** — random interval (`COMPANION_MEOW_*`); `Events.companion_barked` → speech bubble (`ui/companion_bark.tscn`)
+
+Animation names are tunables in `config.gd` (`COMPANION_ANIM_SIT`, etc.). Only `walk` exists in the GLB today; idle clips are placeholders until art lands.
+
+**Scene wiring:** `scenes/companion/companion.gd` reads player `feet_velocity`, delegates to core logic, drives `AnimationPlayer`, emits barks. UI listens via `Events` — no scene-tree lookups from `core/`.
 
 ### 9.3 NPC interaction
 
@@ -624,7 +641,10 @@ Build in order. Each milestone = playable build.
 
 - [x] Lumi follows via AStarGrid2D
 - [x] Stop distance, repath, stuck teleport fallback
-- [x] Depth sort by Z (companion draws in front/behind correctly)
+- [x] Depth sort by Z (3D playground uses GPU depth; 2D Y-bias reserved for isometric areas)
+- [x] **Autonomous idle (logic)** — wander near idle player; sit / play / groom state machine in `core/companion/`
+- [x] **Meow barks** — random speech bubble via `Events.companion_barked` + `ui/companion_bark.tscn`
+- [ ] Idle animation clips in `cat.glb` (`sit`, `play`, `groom`) — names wired in `config.gd`; art pending
 
 ### M4: NPC + dialogue
 
@@ -684,7 +704,7 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 
 Coding standards, workflow, and definition of done live in **`AGENTS.md`** — read it first. Project-specific notes:
 
-1. **Implement milestones in order** per §13 (single source of truth). Next: **M5**.
+1. **Implement milestones in order** per §13. Official next: **M5** (area transitions). **M3 companion autonomy** may proceed in parallel — core logic in `core/companion/`, scene wiring in `scenes/companion/`.
 2. **Match 2D prototype feel** for companion follow pacing and interact radius — reference `reference/whiskerbound-2d-prototype` when tuning. Player movement is governed by Jeheno TPC physics (§4), not grid wall-slide.
 3. **No pixel art, no voxels, no free-orbit camera changes** beyond what the Jeheno TPC already provides.
 4. **After each milestone**: update §13 checkboxes and the Status header, update `README.md` status line, run `bash scripts/run_smoke_test.sh`, commit as `M5: area transitions with fade`.
@@ -710,7 +730,7 @@ bash scripts/run_smoke_test.sh
 # Expected: SMOKE_OK with player and companion positions
 ```
 
-Walk away from Lumi in-game — cream sphere trails behind and stops ~1.25 units away.
+Walk away from Lumi in-game — she follows and stops ~1.25 units away. Stand still ~2 s — she wanders, sits, or grooms nearby; occasional meow bubble appears above her head.
 
 ### Verification (M4)
 

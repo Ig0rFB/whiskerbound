@@ -13,3 +13,4 @@ signal collision_debug_toggled(show_it: bool)
 signal debug_restart_requested
 signal debug_reload_area_requested
 signal debug_spawn_companion_requested
+signal companion_barked(companion: Node3D, text: String)

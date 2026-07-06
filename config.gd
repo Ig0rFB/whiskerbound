@@ -35,6 +35,17 @@ const COMPANION_MODEL_SORT_HEIGHT := 0.2
 const COMPANION_MESH_FLOOR_CLEARANCE := 0.15
 const COMPANION_WALK_ANIM := "walk"
 const COMPANION_WALK_ANIM_SPEED := 1.0
+# Placeholder names — wire when cat.glb gains clips (§9.2).
+const COMPANION_ANIM_SIT := "sit"
+const COMPANION_ANIM_PLAY := "play"
+const COMPANION_ANIM_GROOM := "groom"
+const COMPANION_IDLE_ENTER_SECONDS := 2.0
+const COMPANION_WANDER_RADIUS := 2.5
+const COMPANION_ACTIVITY_MIN_SECONDS := 3.0
+const COMPANION_ACTIVITY_MAX_SECONDS := 8.0
+const COMPANION_MEOW_MIN_INTERVAL := 15.0
+const COMPANION_MEOW_MAX_INTERVAL := 45.0
+const COMPANION_BARK_DURATION := 2.5
 # Radians added to movement-facing yaw (Blender GLB bind pose faces -Z → use PI).
 const COMPANION_MODEL_YAW_OFFSET := PI
 

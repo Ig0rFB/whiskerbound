@@ -123,6 +123,8 @@ func _physics_process(delta: float) -> void:
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
 	var player_velocity: Vector2 = player.feet_velocity
 	if player_velocity.length_squared() < 0.01:
+		player_velocity = Vector2(player.velocity.x, player.velocity.z)
+	if player_velocity.length_squared() < 0.01:
 		player_velocity = InputActions.move_vector * Config.PLAYER_SPEED
 	var feet := Vector2(global_position.x, global_position.z)
 	var previous_feet := feet

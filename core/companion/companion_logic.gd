@@ -90,6 +90,18 @@ static func update(
 	return nudge_from_companions(result, collider, slot, other_feet, grid)
 
 
+## Public wrapper for idle wander steps (core stays grid-pure).
+static func move_toward_feet(
+	feet_pos: Vector2,
+	target: Vector2,
+	grid: CollisionGrid,
+	collider: Rect2,
+	delta: float,
+	other_feet: PackedVector2Array,
+) -> Vector2:
+	return _move_toward(feet_pos, target, grid, collider, delta, other_feet)
+
+
 ## A* goal — player position with velocity lead and per-slot spread (2D prototype feel).
 static func _path_goal(
 	player_pos: Vector2,

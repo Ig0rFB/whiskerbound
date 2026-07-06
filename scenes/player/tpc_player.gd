@@ -76,6 +76,28 @@ func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 
 
+## Jeheno locomotion label shown on the debug HUD (`State: Idle`, `Walk`, …).
+func get_locomotion_state_name() -> String:
+	if state_machine == null:
+		return ""
+	return state_machine.curr_state_name
+
+
+## True when the player is in Jeheno `IdleState` — same signal the debug HUD displays.
+func is_locomotion_idle() -> bool:
+	return get_locomotion_state_name() == "Idle"
+
+
+## XZ velocity for companion path prediction while the player is moving.
+func get_companion_follow_velocity() -> Vector2:
+	if is_locomotion_idle():
+		return Vector2.ZERO
+	var body_vel := Vector2(velocity.x, velocity.z)
+	if body_vel.length_squared() > 0.0001:
+		return body_vel
+	return feet_velocity
+
+
 func face_toward_world(target_feet: Vector2) -> void:
 	var feet := Vector2(global_position.x, global_position.z)
 	var direction := target_feet - feet

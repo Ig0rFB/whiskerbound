@@ -2,7 +2,7 @@
 
 3D exploration and narrative adventure — Godot 4, third-person controller playground, cat companion follow.
 
-**Status:** M5 next (area transitions) — see `PROJECT.md` §13 for the authoritative checklist. M6 items landed early: TPC playground, unified debug HUD, grounded companions/NPCs.
+**Status:** M5 next (area transitions) — see `PROJECT.md` §13. M3 companion autonomy in progress (idle wander, meows). M6 polish landed early: TPC playground, debug HUD, grounded actors.
 
 ## Quick start
 
