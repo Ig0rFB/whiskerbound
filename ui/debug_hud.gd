@@ -106,6 +106,8 @@ func _player_debug_lines() -> PackedStringArray:
 		"Speed: %.2f" % player.velocity.length(),
 		"On floor: %s" % str(player.is_on_floor()),
 		"Air jumps: %d" % player.nb_jumps_in_air_allowed,
+		"Jump buffer: %s" % _jump_buffer_line(player),
+		"Coyote time: %s" % _coyote_time_line(player),
 		"Interact: %s" % _interact_target_line(),
 		"Ray hit: %s" % _interaction_ray_hit_line(),
 		"Ray collider: %s" % _interaction_ray_collider_line(),
@@ -120,6 +122,18 @@ func _player_debug_lines() -> PackedStringArray:
 			lines.append("Model facing: %s" % orient)
 
 	return lines
+
+
+func _jump_buffer_line(player: CharacterBody3D) -> String:
+	if "jump_buff_on" in player:
+		return "on" if player.jump_buff_on else "off"
+	return "—"
+
+
+func _coyote_time_line(player: CharacterBody3D) -> String:
+	if "coyote_jump_cooldown" in player:
+		return "%.2f" % player.coyote_jump_cooldown
+	return "—"
 
 
 func _interact_target_line() -> String:

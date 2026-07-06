@@ -85,7 +85,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			gravity_apply(delta)
 		move_and_slide()
-		Events.interact_target_changed.emit("")
+		_sync_interact_target("", null)
 		return
 	_handle_interaction()
 	super._physics_process(delta)
@@ -94,21 +94,22 @@ func _physics_process(delta: float) -> void:
 ## Reference untitled-game interaction — ray from VisualRoot, camera-facing basis.
 func _handle_interaction() -> void:
 	if _interaction_raycast == null or cam_holder == null:
-		Events.interact_target_changed.emit("")
+		_sync_interact_target("", null)
 		return
 
 	_sync_interaction_ray()
 
+	var target_name := ""
+	var interactable_owner: Node = null
 	if _interaction_raycast.is_colliding():
 		var collider: Object = _interaction_raycast.get_collider()
-		var interactable_owner := _find_interactable_owner(collider)
+		if collider is Node:
+			interactable_owner = _find_interactable_owner(collider)
 
 		if interactable_owner != null:
-			Events.interact_target_changed.emit(interactable_owner.name)
-		else:
-			Events.interact_target_changed.emit("")
-	else:
-		Events.interact_target_changed.emit("")
+			target_name = interactable_owner.name
+
+	_sync_interact_target(target_name, interactable_owner)
 
 
 func _find_interactable_owner(collider: Object) -> Node:
@@ -118,6 +119,14 @@ func _find_interactable_owner(collider: Object) -> Node:
 			return node
 		node = node.get_parent()
 	return null
+
+
+func _sync_interact_target(target_name: String, target_owner: Node) -> void:
+	if GameState.interact_target_name == target_name and GameState.interact_target_owner == target_owner:
+		return
+	GameState.interact_target_name = target_name
+	GameState.interact_target_owner = target_owner
+	Events.interact_target_changed.emit(target_name)
 
 
 ## Aligns the interaction ray with the camera and caches debug draw data.

@@ -29,6 +29,9 @@ func _physics_process(_delta: float) -> void:
 	_handle_debug_shortcuts()
 
 	match GameState.mode:
+		GameState.GameMode.GAMEPLAY:
+			if InputActions.interact_pressed:
+				_try_interact_with_target()
 		GameState.GameMode.DIALOGUE:
 			if InputActions.interact_pressed:
 				_advance_dialogue()
@@ -141,12 +144,26 @@ func _on_interactable_triggered(owner: Node) -> void:
 	_begin_dialogue(owner as Node3D)
 
 
+func _try_interact_with_target() -> void:
+	var target_owner: Node = GameState.interact_target_owner
+	if target_owner == null or not is_instance_valid(target_owner):
+		return
+	if not target_owner.has_node("Interactable"):
+		return
+	var player: Node = GameState.player
+	if player == null or not is_instance_valid(player):
+		return
+	var interactable: Node = target_owner.get_node("Interactable")
+	if interactable.has_method("interact"):
+		interactable.interact(player)
+
+
 func _begin_dialogue(npc: Node3D) -> void:
-	_set_player_camera_input(false)
 	var dialogue_id: int = _resolve_dialogue_id(npc)
 	if dialogue_id < 0 or DialogueData.line_count(dialogue_id) == 0:
 		return
 
+	_set_player_camera_input(false)
 	GameState.mode = GameState.GameMode.DIALOGUE
 	GameState.dialogue_npc = npc
 	GameState.dialogue_id = dialogue_id

@@ -63,8 +63,9 @@ func _initialize() -> void:
 	_test_dialogue_data()
 	_test_bat_npc(game_state)
 	_test_npc_floor_height(game_state)
-	_test_interaction_ray_at_npc(game_state)
-	_test_interaction_ray_at_bat(game_state)
+	await _test_interaction_ray_at_npc(game_state)
+	await _test_interaction_ray_at_bat(game_state)
+	await _test_bat_blocks_player(game_state)
 	await _test_interaction_dialogue_at_gdbot(game_state)
 	_test_companion_visual(game_state)
 
@@ -345,9 +346,14 @@ func _test_interaction_ray_at_bat(game_state: Node) -> void:
 		)
 		quit(1)
 
-	var aim_target := bat.global_position + Vector3(0.0, 0.2, 0.0)
+	await physics_frame
+	await physics_frame
+	await physics_frame
+
+	var stand_y: float = bat.global_position.y - 1.15
+	var aim_target := Vector3(bat.global_position.x, stand_y + 1.0, bat.global_position.z)
 	player.global_position = bat.global_position + Vector3(0.0, 0.0, 2.5)
-	player.global_position.y = bat.global_position.y
+	player.global_position.y = stand_y + 1.0
 	_aim_camera_at(player, aim_target)
 
 	await physics_frame
@@ -369,6 +375,54 @@ func _test_interaction_ray_at_bat(game_state: Node) -> void:
 		if hit_layer != CHARACTER_LAYER:
 			push_error("Expected Bat ray hit on layer %d, got %d" % [CHARACTER_LAYER, hit_layer])
 			quit(1)
+
+	var bat_column_body: StaticBody3D = bat.get_node_or_null("InteractionColumn") as StaticBody3D
+	if bat_column_body == null:
+		push_error("Expected Bat InteractionColumn StaticBody3D")
+		quit(1)
+	var bat_shape: CollisionShape3D = (
+		bat_column_body.get_node_or_null("ColumnShape") as CollisionShape3D
+	)
+	if bat_shape == null or bat_shape.shape is not BoxShape3D:
+		push_error("Expected Bat to have a BoxShape3D ground column")
+		quit(1)
+	var bat_column: BoxShape3D = bat_shape.shape as BoxShape3D
+	var column_height: float = bat_column.size.y
+	if column_height < 0.8:
+		push_error("Expected Bat ground column height >= 0.8, got %.2f" % column_height)
+		quit(1)
+	if bat_column.size.x < 0.8:
+		push_error("Expected Bat column width >= 0.8, got %.2f" % bat_column.size.x)
+		quit(1)
+
+
+func _test_bat_blocks_player(game_state: Node) -> void:
+	var bat: CharacterBody3D = _find_npc_by_id(game_state, "bat") as CharacterBody3D
+	var player: CharacterBody3D = game_state.player
+	if bat == null or player == null:
+		push_error("Expected Bat and player for blocking test")
+		quit(1)
+
+	await physics_frame
+	await physics_frame
+
+	player.global_position = bat.global_position + Vector3(0.0, 0.0, 2.5)
+	player.global_position.y = bat.global_position.y - 1.1
+	var start_z: float = player.global_position.z
+	var had_slide: bool = false
+	for _step in 16:
+		player.velocity = Vector3(0.0, 0.0, -5.0)
+		player.move_and_slide()
+		if player.get_slide_collision_count() > 0:
+			had_slide = true
+		await physics_frame
+
+	if player.global_position.z >= start_z - 0.4:
+		push_error("Expected player blocked by Bat column, moved %.2f" % (start_z - player.global_position.z))
+		quit(1)
+	if not had_slide:
+		push_error("Expected slide collision when walking into Bat column")
+		quit(1)
 
 
 func _test_interaction_dialogue_at_gdbot(game_state: Node) -> void:

@@ -25,6 +25,8 @@ var dialogue_npc: Node3D = null
 var dialogue_id: int = -1
 var dialogue_line: int = 0
 var interact_target_name: String = ""
+## Owner node under the interaction ray (Npc root with an Interactable child).
+var interact_target_owner: Node = null
 var quest_flags: Dictionary = {}
 
 
@@ -40,4 +42,5 @@ func clear_world_refs() -> void:
 	dialogue_id = -1
 	dialogue_line = 0
 	interact_target_name = ""
+	interact_target_owner = null
 	mode = GameMode.GAMEPLAY

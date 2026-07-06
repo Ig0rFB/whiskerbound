@@ -19,6 +19,12 @@ const NPC_BODY_RADIUS := 0.35
 const NPC_BODY_HEIGHT := 2.2
 const NPC_FLOATING_BODY_RADIUS := 0.45
 const NPC_FLOATING_BODY_HEIGHT := 1.2
+## Minimum cylinder span for floating NPC ground columns (Bat interaction).
+const NPC_FLOATING_COLUMN_MIN_HEIGHT := 0.5
+## Local Y top for floating columns — must reach chest-height rays (InteractionRaycast ~1 m).
+const NPC_FLOATING_COLUMN_TOP_LOCAL := 1.5
+const NPC_FLOATING_GROUND_RAY_ABOVE := 1.0
+const NPC_FLOATING_GROUND_RAY_BELOW := 50.0
 
 # Movement (grid pathfinding + companion follow)
 const GRID_CELL := 1.0

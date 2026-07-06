@@ -5,23 +5,29 @@ extends "res://scenes/player/gdquest/StateMachine/player_character_script.gd"
 var feet_velocity: Vector2 = Vector2.ZERO
 
 var _last_feet: Vector2 = Vector2.ZERO
-var _debug_stats: Control = null
 
 
 func _ready() -> void:
 	super._ready()
+	_disable_embedded_debug_hud()
 	call_deferred("_bind_to_game_state")
-	if debug_hud != null:
-		_debug_stats = debug_hud.get_node_or_null("HBoxContainer") as Control
-		if _debug_stats != null:
-			_debug_stats.visible = GameState.show_debug_hud
 	call_deferred("_bind_interaction_ray_exceptions")
 
 
+func _disable_embedded_debug_hud() -> void:
+	## Reference player ships a CanvasLayer debug HUD; Whiskerbound uses ui/game_ui DebugHud instead.
+	if debug_hud == null:
+		return
+	debug_hud.visible = false
+	debug_hud.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+func display_properties() -> void:
+	pass
+
+
 func _process(delta: float) -> void:
-	if _debug_stats != null and _debug_stats.visible != GameState.show_debug_hud:
-		_debug_stats.visible = GameState.show_debug_hud
-	super._process(delta)
+	modify_model_orientation(delta)
 
 
 func _physics_process(delta: float) -> void:
@@ -45,27 +51,16 @@ func handle_interaction() -> void:
 	interaction_raycast.force_raycast_update()
 
 	var target_name := ""
+	var interactable_owner: Node = null
 	if interaction_raycast.is_colliding():
 		var collider: Object = interaction_raycast.get_collider()
-		var interactable_node: Node = null
-		var interactable_owner: Node = null
-
 		if collider is Node:
 			interactable_owner = _find_interactable_owner(collider as Node)
 
 		if interactable_owner != null:
-			interactable_node = interactable_owner.get_node("Interactable")
 			target_name = interactable_owner.name
-			if debug_hud != null and GameState.show_debug_hud:
-				debug_hud.display_interact_target(interactable_owner.name)
-			if Input.is_action_just_pressed(interactAction):
-				interactable_node.interact(self)
-		elif debug_hud != null and GameState.show_debug_hud:
-			debug_hud.display_interact_target("None")
-	elif debug_hud != null and GameState.show_debug_hud:
-		debug_hud.display_interact_target("None")
 
-	_sync_interact_target_name(target_name)
+	_sync_interact_target(target_name, interactable_owner)
 
 
 func _find_interactable_owner(from: Node) -> Node:
@@ -124,10 +119,11 @@ func _bind_interaction_ray_exceptions() -> void:
 			interaction_raycast.add_exception(companion as CollisionObject3D)
 
 
-func _sync_interact_target_name(target_name: String) -> void:
-	if GameState.interact_target_name == target_name:
+func _sync_interact_target(target_name: String, target_owner: Node) -> void:
+	if GameState.interact_target_name == target_name and GameState.interact_target_owner == target_owner:
 		return
 	GameState.interact_target_name = target_name
+	GameState.interact_target_owner = target_owner
 	Events.interact_target_changed.emit(target_name)
 
 
