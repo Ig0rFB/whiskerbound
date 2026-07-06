@@ -13,7 +13,8 @@ const COLUMN_SHAPE_NAME := "ColumnShape"
 
 @onready var _collision_shape: CollisionShape3D = $CollisionShape3D
 
-var _floating_column_frames_remaining: int = 0
+var _floating_column_pending: bool = false
+var _floating_column_attempts: int = 0
 
 
 func _ready() -> void:
@@ -21,7 +22,7 @@ func _ready() -> void:
 	if motion_type == MotionType.FLOATING and interaction_column_to_ground:
 		if _collision_shape != null:
 			_collision_shape.disabled = true
-		_floating_column_frames_remaining = 2
+		_floating_column_pending = true
 	else:
 		_configure_grounded_collision_shape()
 	add_to_group("npcs")
@@ -33,12 +34,14 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	if _floating_column_frames_remaining <= 0:
+	if not _floating_column_pending:
 		return
-	_floating_column_frames_remaining -= 1
-	if _floating_column_frames_remaining > 0:
-		return
-	_configure_floating_column_collision()
+	# Build once the floor ray finds ground, retrying each frame up to a cap, rather than
+	# guessing a fixed frame count for physics/skin readiness.
+	_floating_column_attempts += 1
+	var forced: bool = _floating_column_attempts >= Config.NPC_FLOATING_COLUMN_MAX_ATTEMPTS
+	if _configure_floating_column_collision(forced):
+		_floating_column_pending = false
 
 
 ## Humanoid capsule for grounded NPCs.
@@ -55,12 +58,21 @@ func _configure_grounded_collision_shape() -> void:
 	_collision_shape.disabled = false
 
 
-## Static column from mesh top to floor — floating CharacterBody3D does not block the player.
-func _configure_floating_column_collision() -> void:
+## Static column spanning floor to chest height for a floating NPC.
+## The flyer sits well above the ground, so its own capsule never overlaps the player capsule
+## (that vertical gap, not the FLOATING motion mode, is why the player used to walk under it).
+## A StaticBody3D child carries the floor-length shape so it does not fight the moving body's physics.
+## Returns false when the floor is not found yet and the caller should retry (unless [param forced]).
+func _configure_floating_column_collision(forced: bool) -> bool:
 	if not is_inside_tree():
-		return
+		return false
 
 	var ground_local_y: float = _raycast_ground_local_y()
+	if is_nan(ground_local_y):
+		if not forced:
+			return false
+		push_warning("%s: floating column floor ray found no ground after %d attempts; using body-local Y 0 as floor." % [name, Config.NPC_FLOATING_COLUMN_MAX_ATTEMPTS])
+		ground_local_y = 0.0
 	var mesh_bounds: Vector2 = _estimate_mesh_vertical_bounds_local()
 	var top_y: float = maxf(mesh_bounds.y, Config.NPC_FLOATING_COLUMN_TOP_LOCAL)
 	top_y = maxf(top_y, ground_local_y + Config.NPC_FLOATING_COLUMN_MIN_HEIGHT)
@@ -92,8 +104,10 @@ func _configure_floating_column_collision() -> void:
 
 	if _collision_shape != null:
 		_collision_shape.disabled = true
+	return true
 
 
+## Local Y of the floor below this NPC, or NAN when the downward ray hits nothing.
 func _raycast_ground_local_y() -> float:
 	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
 	var from: Vector3 = global_position + Vector3.UP * Config.NPC_FLOATING_GROUND_RAY_ABOVE
@@ -103,7 +117,7 @@ func _raycast_ground_local_y() -> float:
 	query.exclude = _ground_ray_exclude_rids()
 	var hit: Dictionary = space_state.intersect_ray(query)
 	if hit.is_empty():
-		return 0.0
+		return NAN
 	return to_local(hit.position as Vector3).y
 
 

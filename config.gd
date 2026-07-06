@@ -25,6 +25,8 @@ const NPC_FLOATING_COLUMN_MIN_HEIGHT := 0.5
 const NPC_FLOATING_COLUMN_TOP_LOCAL := 1.5
 const NPC_FLOATING_GROUND_RAY_ABOVE := 1.0
 const NPC_FLOATING_GROUND_RAY_BELOW := 50.0
+## Physics frames to retry the floor ray before building a floating column with a fallback floor.
+const NPC_FLOATING_COLUMN_MAX_ATTEMPTS := 8
 
 # Movement (grid pathfinding + companion follow)
 const GRID_CELL := 1.0
