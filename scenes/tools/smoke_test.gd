@@ -1,7 +1,7 @@
 extends SceneTree
 ## Headless smoke test — run with: bash scripts/run_smoke_test.sh
 
-const AREA_ID := "tpc_playground"
+const AREA_ID := "playground"
 const SPAWN_FEET := Vector2(51.0, 38.0)
 const SOLID_MARKER_CELL := Vector2i(60, 40)
 
@@ -282,7 +282,7 @@ func _test_companion_visual(game_state: Node) -> void:
 
 func _test_elder_cat_npc(game_state: Node) -> void:
 	if game_state.npcs.is_empty():
-		push_error("Expected at least one NPC in tpc_playground")
+		push_error("Expected at least one NPC in playground")
 		quit(1)
 
 	var player: CharacterBody3D = game_state.player

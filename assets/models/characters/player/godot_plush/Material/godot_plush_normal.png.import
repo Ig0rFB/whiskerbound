@@ -2,26 +2,27 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drijhg0g7ak1n"
-path="res://.godot/imported/godot_plush_albedo.png-dd954879c36d908594eaad74dab8a415.ctex"
+uid="uid://kt62yab5c17v"
+path.s3tc="res://.godot/imported/godot_plush_normal.png-95f030f836d08f2839cee44c24b1ca8f.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://addons/JehenoThirdPersonController/PlayerCharacter/GodotPlush/Material/godot_plush_albedo.png"
-dest_files=["res://.godot/imported/godot_plush_albedo.png-dd954879c36d908594eaad74dab8a415.ctex"]
+source_file="res://assets/models/characters/player/godot_plush/Material/godot_plush_normal.png"
+dest_files=["res://.godot/imported/godot_plush_normal.png-95f030f836d08f2839cee44c24b1ca8f.s3tc.ctex"]
 
 [params]
 
-compress/mode=3
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
-compress/normal_map=0
+compress/normal_map=1
 compress/channel_pack=0
 mipmaps/generate=true
 mipmaps/limit=-1

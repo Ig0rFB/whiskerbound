@@ -45,14 +45,10 @@ const DEFAULT_BINDINGS := {
 	],
 	"play_char_aim_cam_side_action": [{"type": "key", "code": KEY_G}],
 	"play_char_cam_zoom_in_action": [
-		{"type": "mouse", "code": MOUSE_BUTTON_WHEEL_UP},
 		{"type": "key", "code": KEY_V},
-		{"type": "joy_axis", "axis": JOY_AXIS_TRIGGER_RIGHT, "value": 1.0},
 	],
 	"play_char_cam_zoom_out_action": [
-		{"type": "mouse", "code": MOUSE_BUTTON_WHEEL_DOWN},
 		{"type": "key", "code": KEY_B},
-		{"type": "joy_axis", "axis": JOY_AXIS_TRIGGER_LEFT, "value": 1.0},
 	],
 	"play_char_change_cam_collision_action": [{"type": "key", "code": KEY_T}],
 }

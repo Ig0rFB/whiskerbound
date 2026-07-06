@@ -5,6 +5,10 @@ extends RefCounted
 
 const DEVICE := 0
 
+# Standard SDL trigger axes — do not include stick axes (2/3) as fallbacks.
+const _LEFT_TRIGGER_AXES: Array[int] = [JOY_AXIS_TRIGGER_LEFT]
+const _RIGHT_TRIGGER_AXES: Array[int] = [JOY_AXIS_TRIGGER_RIGHT]
+
 var _was_connected := false
 var _prev_held: Dictionary = {}
 var _confirm_button: JoyButton = JOY_BUTTON_A
@@ -103,8 +107,8 @@ func zoom_axis() -> float:
 	var device := active_device()
 	if device < 0:
 		return 0.0
-	var l2 := _normalise_trigger(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT))
-	var r2 := _normalise_trigger(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT))
+	var l2 := _read_trigger(device, _trigger_axes_for(device, true))
+	var r2 := _read_trigger(device, _trigger_axes_for(device, false))
 	if l2 <= _deadzone() and r2 <= _deadzone():
 		return 0.0
 	return l2 - r2
@@ -157,3 +161,18 @@ static func _normalise_trigger(value: float) -> float:
 		return clampf(value, 0.0, 1.0)
 	# Some pads report triggers as −1 (rest) → +1 (pressed).
 	return clampf((value + 1.0) * 0.5, 0.0, 1.0)
+
+
+static func _read_trigger(device: int, axes: Array[int]) -> float:
+	var best := 0.0
+	for axis in axes:
+		best = maxf(best, _normalise_trigger(Input.get_joy_axis(device, axis)))
+	return best
+
+
+func _trigger_axes_for(device: int, left: bool) -> Array[int]:
+	var name := Input.get_joy_name(device).to_lower()
+	# 8BitDo pads in some modes map triggers to axes 6/7 instead of 4/5.
+	if "8bitdo" in name:
+		return [6 if left else 7, 4 if left else 5]
+	return _LEFT_TRIGGER_AXES if left else _RIGHT_TRIGGER_AXES

@@ -191,7 +191,7 @@ This is the reference implementation for “good” 3D collision — companions 
 
 | Area | Grid source | Notes |
 |---|---|---|
-| `tpc_playground` | Coarse baked grid (112×112): borders + one marker solid cell | Does **not** mirror CSG walls — companion may path through grid cells the player cannot walk through |
+| `playground` | Coarse baked grid (112×112): borders + one marker solid cell | Does **not** mirror CSG walls — companion may path through grid cells the player cannot walk through |
 | `village_green` | Full painted grid (legacy flat area) | Matches old 2D-style feet sampling; kept for regression |
 
 **Feet sampling** (`core/movement/movement.gd`, `player_collider.gd`, `COLLISION_INSET`): still used for grid-based logic and the legacy village area. Rect footprint at foot height, inset 0.1 units to reduce edge snagging.
@@ -340,8 +340,8 @@ whiskerbound/
 │   ├── input_actions.gd         # keyboard + gamepad → actions each frame
 │   └── gamepad.gd               # deadzone, confirm/cancel layout, L2/R2 zoom
 ├── scenes/
-│   ├── main.tscn / main.gd / area_loader.gd
-│   ├── areas/                   # tpc_playground (default), village_green (legacy grid)
+│   ├── main.tscn / main.gd / area_manager.gd
+│   ├── areas/                   # playground (default), village_green (legacy grid)
 │   ├── camera/                  # camera_rig (legacy OOTS, editor only), camera_preview
 │   ├── companion/               # companion.gd/.tscn
 │   ├── debug/                   # collision_debug, companion_path_debug
@@ -453,7 +453,7 @@ func _physics_process(delta: float) -> void:
 | **Moving** (companion) | A* sets target feet on XZ → `_apply_horizontal_velocity()` → `apply_gravity()` → `move_and_slide()` | `scenes/companion/companion.gd` |
 | **Static** (NPC) | `velocity.x/z = 0` each frame → `apply_gravity()` → `move_and_slide()` (stays on slopes/platforms) | `scenes/npc/npc.gd` |
 
-**Spawn from code** (e.g. `area_loader.gd`):
+**Spawn from code** (e.g. `area_manager.gd`):
 
 ```gdscript
 var actor := preload("res://scenes/companion/companion.tscn").instantiate()
@@ -696,7 +696,7 @@ Headless smoke test (no display required):
 
 ```bash
 bash scripts/run_smoke_test.sh
-# Expected: SMOKE_OK: player at (...) companion at (...) area=tpc_playground
+# Expected: SMOKE_OK: player at (...) companion at (...) area=playground
 ```
 
 Interactive: open project in Godot 4.7 and press **F5**. WASD to move; **H** toggles debug HUD (collision overlay, player state including on-floor).

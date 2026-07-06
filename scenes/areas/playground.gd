@@ -1,29 +1,37 @@
 extends Node3D
-## Jeheno third-person playground — sandbox CSG environment with Whiskerbound systems.
-
-const TEST_MAP_SCENE := preload(
-	"res://addons/JehenoThirdPersonController/Map/test_map_scene.tscn"
-)
+## Default starter level — map, player, companions, and NPCs in one editor scene.
 
 const GRID_WIDTH := 112
 const GRID_HEIGHT := 112
-## Shifts sandbox geometry into positive grid coordinates for collision/minimap.
-const WORLD_OFFSET := Vector3(56.0, 0.0, 56.0)
 ## Dev marker cell — used by smoke tests for a known solid tile.
 const MARKER_SOLID_CELL := Vector2i(60, 40)
-
-@onready var _world_offset: Node3D = $WorldOffset
 
 var _collision_grid: CollisionGrid
 
 
 func _ready() -> void:
 	_collision_grid = _build_collision_grid()
-	_spawn_environment()
 
 
 func get_player_spawn_global() -> Vector3:
-	return $PlayerSpawn.global_position
+	var scene_player := get_scene_player()
+	if scene_player != null:
+		return scene_player.global_position
+	return global_position
+
+
+func get_scene_player() -> TpcPlayer:
+	return get_node_or_null("Actors/Player") as TpcPlayer
+
+
+func get_scene_companions() -> Array[Node3D]:
+	var result: Array[Node3D] = []
+	if not has_node("Actors/Companions"):
+		return result
+	for child in $Actors/Companions.get_children():
+		if child is Node3D:
+			result.append(child as Node3D)
+	return result
 
 
 func get_collision_grid() -> CollisionGrid:
@@ -36,15 +44,6 @@ func get_npcs() -> Array:
 		for child in $NPCs.get_children():
 			result.append(child)
 	return result
-
-
-func _spawn_environment() -> void:
-	var environment: Node3D = TEST_MAP_SCENE.instantiate()
-	_world_offset.add_child(environment)
-
-	var embedded_player := environment.get_node_or_null("PlayerCharacter")
-	if embedded_player != null:
-		embedded_player.queue_free()
 
 
 func _build_collision_grid() -> CollisionGrid:

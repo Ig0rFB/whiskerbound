@@ -1,9 +1,14 @@
-extends RefCounted
+class_name AreaManager
+extends Node
 ## Loads and swaps area scenes — fresh boot vs transition (M5 prep).
 
 const AREA_SCENES := {
-	"tpc_playground": "res://scenes/areas/tpc_playground.tscn",
+	"playground": "res://scenes/areas/playground.tscn",
 	"village_green": "res://scenes/areas/village_green.tscn",
+}
+
+const LEGACY_AREA_IDS := {
+	"tpc_playground": "playground",
 }
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
@@ -17,28 +22,27 @@ var companions: Array[Node3D] = []
 var collision_debug: Node3D = null
 var companion_path_debug: Node3D = null
 
-var _world_root: Node3D = null
-
-
-func bind_world_root(world_root: Node3D) -> void:
-	_world_root = world_root
+@onready var _world_root: Node3D = %WorldRoot
 
 
 func load_fresh(area_id: String) -> void:
 	clear_all()
-	_load_area_scene(area_id)
-	_spawn_player(_area_spawn_position(area, ""))
-	_spawn_initial_companion()
+	var resolved_id := _normalize_area_id(area_id)
+	_load_area_scene(resolved_id)
+	if not _try_adopt_player(area):
+		_spawn_player(_area_spawn_position(area, ""))
+	if not _try_adopt_companions(area):
+		_spawn_initial_companion()
 	_spawn_collision_debug()
 	_spawn_companion_path_debug()
-	_sync_game_state(area_id)
+	_sync_game_state(resolved_id)
 
 
 func load_from_save(snapshot: Dictionary) -> bool:
 	if snapshot.is_empty():
 		return false
 
-	var area_id: String = str(snapshot.get("area_id", "tpc_playground"))
+	var area_id := _normalize_area_id(str(snapshot.get("area_id", "playground")))
 	if not AREA_SCENES.has(area_id):
 		push_error("SaveGame: unknown area %s" % area_id)
 		return false
@@ -59,7 +63,7 @@ func load_from_save(snapshot: Dictionary) -> bool:
 			var feet := Vector2(float(entry.get("x", 0.0)), float(entry.get("z", 0.0)))
 			var companion: Node3D = COMPANION_SCENE.instantiate()
 			_world_root.add_child(companion)
-			companion.setup(slot, feet)
+			companion.setup(slot, feet, player.global_position.y + 2.0)
 			companions.append(companion)
 
 	if snapshot.has("camera_distance"):
@@ -135,7 +139,7 @@ func spawn_debug_companion() -> bool:
 	)
 	var companion: Node3D = COMPANION_SCENE.instantiate()
 	_world_root.add_child(companion)
-	companion.setup(slot, spawn_feet)
+	companion.setup(slot, spawn_feet, player.global_position.y + 2.0)
 	companions.append(companion)
 	_sync_companion_state()
 	return true
@@ -198,6 +202,45 @@ func _spawn_player(spawn_pos: Vector3) -> void:
 		player.call_deferred("_bind_camera_to_game_state")
 
 
+func _try_adopt_player(area_node: Node3D) -> bool:
+	var scene_player: TpcPlayer = null
+	if area_node.has_method("get_scene_player"):
+		scene_player = area_node.get_scene_player()
+	elif area_node.has_node("Actors/Player"):
+		scene_player = area_node.get_node("Actors/Player") as TpcPlayer
+	if scene_player == null:
+		return false
+
+	player = scene_player
+	player.reparent(_world_root)
+	if player.has_method("_bind_camera_to_game_state"):
+		player.call_deferred("_bind_camera_to_game_state")
+	return true
+
+
+func _try_adopt_companions(area_node: Node3D) -> bool:
+	var nodes: Array[Node3D] = []
+	if area_node.has_method("get_scene_companions"):
+		nodes = area_node.get_scene_companions()
+	elif area_node.has_node("Actors/Companions"):
+		for child in area_node.get_node("Actors/Companions").get_children():
+			if child is Node3D:
+				nodes.append(child as Node3D)
+	if nodes.is_empty():
+		return false
+
+	for slot in nodes.size():
+		var companion: Node3D = nodes[slot]
+		companion.reparent(_world_root)
+		if companion.has_method("activate"):
+			companion.activate(slot)
+		elif companion.has_method("setup"):
+			var feet := Vector2(companion.global_position.x, companion.global_position.z)
+			companion.setup(slot, feet, companion.global_position.y)
+		companions.append(companion)
+	return true
+
+
 func _spawn_initial_companion() -> void:
 	if player == null:
 		return
@@ -211,7 +254,7 @@ func _spawn_initial_companion() -> void:
 	)
 	var companion: Node3D = COMPANION_SCENE.instantiate()
 	_world_root.add_child(companion)
-	companion.setup(0, companion_feet)
+	companion.setup(0, companion_feet, player.global_position.y + 2.0)
 	companions.append(companion)
 
 
@@ -246,7 +289,7 @@ func _reposition_companions() -> void:
 			Vector2.ZERO,
 			other_feet,
 		)
-		companion.setup(slot, spawn_feet)
+		companion.setup(slot, spawn_feet, player.global_position.y + 2.0)
 
 
 func _companion_feet_excluding(exclude_slot: int) -> PackedVector2Array:
@@ -305,6 +348,10 @@ func _reset_dialogue_state() -> void:
 	GameState.dialogue_id = -1
 	GameState.dialogue_line = 0
 	GameState.mode = GameState.GameMode.GAMEPLAY
+
+
+func _normalize_area_id(area_id: String) -> String:
+	return LEGACY_AREA_IDS.get(area_id, area_id)
 
 
 func _free_entity(node: Node) -> void:

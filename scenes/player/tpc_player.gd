@@ -1,12 +1,12 @@
 class_name TpcPlayer
 extends PlayerCharacter
 ## Whiskerbound player — Jeheno third-person controller with companion + UI hooks.
+## Not @tool — editor preview is handled by GodotPlushSkin; @tool here spams GameState/camera errors.
 
 const GamepadInputScript := preload("res://input/gamepad.gd")
 
 const LOOK_SENSITIVITY := 9.0
 const LOOK_DEADZONE := 0.18
-const WHEEL_ZOOM_STEP := 0.35
 
 var feet_velocity: Vector2 = Vector2.ZERO
 
@@ -41,6 +41,25 @@ func _process(delta: float) -> void:
 	if GameState.mode == GameState.GameMode.GAMEPLAY:
 		_apply_gamepad_look(delta)
 		_poll_camera_zoom(delta)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if GameState.mode != GameState.GameMode.GAMEPLAY or cam_holder == null:
+		return
+	if not event is InputEventMouseButton or not event.pressed:
+		return
+
+	var delta_dist := 0.0
+	match event.button_index:
+		MOUSE_BUTTON_WHEEL_UP:
+			delta_dist = -Config.CAMERA_ZOOM_WHEEL_STEP
+		MOUSE_BUTTON_WHEEL_DOWN:
+			delta_dist = Config.CAMERA_ZOOM_WHEEL_STEP
+		_:
+			return
+
+	_apply_camera_zoom_delta(delta_dist)
+	get_viewport().set_input_as_handled()
 
 
 func _physics_process(delta: float) -> void:
@@ -145,25 +164,24 @@ func _apply_gamepad_look(delta: float) -> void:
 func _poll_camera_zoom(delta: float) -> void:
 	if cam_holder == null or GameState.mode != GameState.GameMode.GAMEPLAY:
 		return
-	var spring := cam_holder.get_node_or_null("%SpringArm3D") as SpringArm3D
-	if spring == null:
-		return
 
-	var zoom_speed := 10.0
+	# V/B keys only — wheel is discrete via _unhandled_input; triggers via gamepad.gd.
 	var axis := Input.get_axis(cam_holder.cam_zoom_in_action, cam_holder.cam_zoom_out_action)
-	axis -= InputActions.camera_zoom_axis
-
-	if Input.is_action_just_pressed(cam_holder.cam_zoom_in_action):
-		axis -= WHEEL_ZOOM_STEP
-	if Input.is_action_just_pressed(cam_holder.cam_zoom_out_action):
-		axis += WHEEL_ZOOM_STEP
-
+	axis += InputActions.camera_zoom_axis
 	if absf(axis) < 0.001:
 		return
 
-	spring.spring_length += axis * zoom_speed * delta
+	_apply_camera_zoom_delta(axis * Config.CAMERA_ZOOM_SPEED * delta)
+
+
+func _apply_camera_zoom_delta(delta_dist: float) -> void:
+	if cam_holder == null or is_equal_approx(delta_dist, 0.0):
+		return
+	var spring := cam_holder.get_node_or_null("%SpringArm3D") as SpringArm3D
+	if spring == null:
+		return
 	spring.spring_length = clampf(
-		spring.spring_length,
+		spring.spring_length + delta_dist,
 		cam_holder.min_spring_length,
 		cam_holder.max_spring_length,
 	)

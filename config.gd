@@ -31,10 +31,16 @@ const COMPANION_PREDICT_SECONDS := 0.35
 const COMPANION_SLOT_LATERAL := 0.4
 const COMPANION_MODEL_TARGET_HEIGHT := 0.4
 const COMPANION_MODEL_SORT_HEIGHT := 0.2
+## Lifts fitted mesh above the floor contact to avoid paw clipping (coplanar z-fight).
+const COMPANION_MESH_FLOOR_CLEARANCE := 0.15
 const COMPANION_WALK_ANIM := "walk"
 const COMPANION_WALK_ANIM_SPEED := 1.0
 # Radians added to movement-facing yaw (Blender GLB bind pose faces -Z → use PI).
 const COMPANION_MODEL_YAW_OFFSET := PI
+
+# Editor floor snap for scene-placed companions (raycast above/below current XZ)
+const EDITOR_FLOOR_SNAP_RAY_ABOVE := 20.0
+const EDITOR_FLOOR_SNAP_RAY_BELOW := 50.0
 
 # Placeholder colours (PROJECT.md §14)
 const COLOR_GROUND := Color("#7CB87C")
@@ -49,6 +55,10 @@ const COLOR_COLLISION_DEBUG := Color(1.0, 0.2, 0.2, 0.35)
 const DEBUG_MAX_COMPANIONS := 8
 const MINIMAP_PANEL_SIZE := 168
 const MINIMAP_MARGIN := 16
+
+# Camera zoom (TPC spring arm — wheel is discrete, keys/triggers are continuous)
+const CAMERA_ZOOM_SPEED := 10.0
+const CAMERA_ZOOM_WHEEL_STEP := 1.0
 
 # Gamepad (PROJECT.md §11 — SN30 Pro / generic)
 const GAMEPAD_DEADZONE := 0.2

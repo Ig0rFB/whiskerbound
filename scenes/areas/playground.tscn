@@ -1,0 +1,164 @@
+[gd_scene format=3 uid="uid://dg1ewj06f2hsf"]
+
+[ext_resource type="Script" uid="uid://d2y1ditd1uxe4" path="res://scenes/areas/playground.gd" id="1_area"]
+[ext_resource type="Texture2D" uid="uid://nu6btp05qtin" path="res://addons/JehenoThirdPersonController/Arts/godot-prototype-texture/PNG/grid_1024x1024/grid_black_1024x1024.png" id="2_tex"]
+[ext_resource type="PackedScene" uid="uid://0nhxf5qfk441" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://c3companion01" path="res://scenes/companion/companion.tscn" id="4_companion"]
+[ext_resource type="PackedScene" uid="uid://b4npc0000001" path="res://scenes/npc/npc.tscn" id="5_npc"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+ground_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_env")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_ground"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grid"]
+diffuse_mode = 1
+albedo_texture = ExtResource("2_tex")
+metallic_specular = 0.0
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+uv1_triplanar = true
+uv1_world_triplanar = true
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
+size = Vector2(110, 110)
+
+[node name="Playground" type="Node3D" unique_id=1968803514]
+script = ExtResource("1_area")
+
+[node name="WorldOffset" type="Node3D" parent="." unique_id=1066731493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 0, 56)
+
+[node name="Environment" type="Node3D" parent="WorldOffset" unique_id=842196824]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldOffset/Environment" unique_id=592843596]
+transform = Transform3D(-0.866023, -0.433016, 0.250001, 0, 0.499998, 0.866027, -0.500003, 0.749999, -0.43301, 0, 46.7243, -24.7815)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="WorldOffset/Environment" unique_id=6897935]
+environment = SubResource("Environment_main")
+
+[node name="Structures" type="Node3D" parent="WorldOffset" unique_id=798834872]
+
+[node name="Ground" type="StaticBody3D" parent="WorldOffset/Structures" unique_id=1658055732]
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WorldOffset/Structures/Ground" unique_id=1106144682]
+shape = SubResource("WorldBoundaryShape3D_ground")
+
+[node name="GroundMesh" type="MeshInstance3D" parent="WorldOffset/Structures/Ground" unique_id=1531474116]
+material_override = SubResource("StandardMaterial3D_grid")
+mesh = SubResource("PlaneMesh_ground")
+skeleton = NodePath("../../..")
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="WorldOffset/Structures" unique_id=1981449746]
+material_override = SubResource("StandardMaterial3D_grid")
+use_collision = true
+collision_mask = 2
+
+[node name="CSGBox3D" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=962811665]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, -7)
+size = Vector3(8, 2, 10)
+
+[node name="CSGBox3D11" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1504415029]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3, 23.5)
+size = Vector3(4, 6, 1)
+
+[node name="CSGBox3D2" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=774363641]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, -9)
+size = Vector3(4, 2, 6)
+
+[node name="CSGBox3D4" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1230357741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1, -9)
+size = Vector3(6, 2, 6)
+
+[node name="CSGBox3D7" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1512899209]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 1, -17)
+size = Vector3(4, 2, 4)
+
+[node name="CSGBox3D8" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=649453784]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 2, -26)
+size = Vector3(4, 4, 4)
+
+[node name="CSGBox3D9" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=2010268344]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 2.5, -38.5)
+size = Vector3(3, 5, 5)
+
+[node name="CSGBox3D10" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1865313002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.5, 3.5, -44.5)
+size = Vector3(9, 7, 5)
+
+[node name="CSGBox3D3" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=254667483]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 2, -12)
+size = Vector3(6, 4, 12)
+
+[node name="CSGBox3D6" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1451875960]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 3, -21)
+size = Vector3(6, 6, 6)
+
+[node name="CSGBox3D5" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1651666551]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -18)
+size = Vector3(14, 6, 12)
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1225530828]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2, 0, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D5" type="CSGPolygon3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=2028435547]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 26, 0, -6)
+polygon = PackedVector2Array(-1, 0, 0, 4, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D4" type="CSGPolygon3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1142599289]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, -6, 0, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 4.0
+
+[node name="CSGPolygon3D3" type="CSGPolygon3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=620530690]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -18, 4, -18)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 6.0
+
+[node name="CSGPolygon3D2" type="CSGPolygon3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=2115521512]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -6)
+polygon = PackedVector2Array(0, 0, 0, 2, 6, 0)
+depth = 6.0
+
+[node name="Actors" type="Node3D" parent="." unique_id=36497373]
+
+[node name="EditorFocus" type="Marker3D" parent="Actors" unique_id=-1447774244]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 6, 40)
+gizmo_extents = 1.0
+
+[node name="Player" parent="Actors" unique_id=2095361906 instance=ExtResource("3_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51, 6, 38)
+
+[node name="Companions" type="Node3D" parent="Actors" unique_id=1982746501]
+
+[node name="Lumi" parent="Actors/Companions" unique_id=1307605848 instance=ExtResource("4_companion")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.099247, 6, 38)
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+floor_max_angle = 0.80285144
+floor_snap_length = 0.5
+body_radius = 0.22
+body_height = 0.35
+
+[node name="NPCs" type="Node3D" parent="." unique_id=448952164]
+
+[node name="ElderCat" parent="NPCs" unique_id=892781998 instance=ExtResource("5_npc")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 6, 42)
+npc_id = "elder_cat"
+dialogue_id = 0
+display_name = "Elder Cat"

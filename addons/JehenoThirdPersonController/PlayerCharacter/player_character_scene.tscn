@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bgkmxyw21pc1m"]
 
 [ext_resource type="Script" uid="uid://de2sqbhiahmo6" path="res://addons/JehenoThirdPersonController/PlayerCharacter/StateMachine/player_character_script.gd" id="1_ms4x1"]
-[ext_resource type="PackedScene" uid="uid://dmyrflud401tg" path="res://addons/JehenoThirdPersonController/PlayerCharacter/GodotPlush/godot_plush_skin.tscn" id="2_mtsks"]
+[ext_resource type="PackedScene" uid="uid://c8plushskin01" path="res://scenes/player/godot_plush_skin.tscn" id="2_mtsks"]
 [ext_resource type="Script" uid="uid://3h8kirrnujiv" path="res://addons/JehenoThirdPersonController/PlayerCharacter/VFX/particles_manager_script.gd" id="3_v44tt"]
 [ext_resource type="Material" uid="uid://fkuklawrv3wp" path="res://addons/JehenoThirdPersonController/PlayerCharacter/VFX/dust_mat.tres" id="4_j7qt1"]
 [ext_resource type="AudioStream" uid="uid://b7q12qmsksbc7" path="res://addons/JehenoThirdPersonController/PlayerCharacter/Sounds/footstep_concrete_000.ogg" id="5_8ixl8"]

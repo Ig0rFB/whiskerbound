@@ -11,7 +11,8 @@ extends CharacterBody3D
 func _ready() -> void:
 	_apply_body_defaults()
 	_ensure_collision_shape()
-	call_deferred("snap_to_floor")
+	if not Engine.is_editor_hint():
+		call_deferred("snap_to_floor")
 
 
 func _apply_body_defaults() -> void:
@@ -19,7 +20,7 @@ func _apply_body_defaults() -> void:
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(46.0)
 	collision_layer = Config.COLLISION_LAYER_CHARACTER
-	collision_mask = Config.COLLISION_LAYER_WORLD
+	collision_mask = Config.COLLISION_LAYER_WORLD | Config.COLLISION_LAYER_CHARACTER
 	axis_lock_angular_x = true
 	axis_lock_angular_y = true
 	axis_lock_angular_z = true

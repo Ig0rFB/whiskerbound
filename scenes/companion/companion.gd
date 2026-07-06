@@ -1,3 +1,4 @@
+@tool
 extends GroundedCharacter
 ## Lumi — cat companion follow via A* (PROJECT.md §9.2).
 
@@ -10,28 +11,102 @@ var _slot: int = 0
 var _anim: AnimationPlayer
 var _last_feet: Vector2 = Vector2.ZERO
 var _model_fitted := false
+var _editor_snapping := false
 
 
 func _ready() -> void:
 	body_radius = Config.COMPANION_BODY_RADIUS
 	body_height = Config.COMPANION_BODY_HEIGHT
+	if Engine.is_editor_hint():
+		_apply_body_defaults()
+		_ensure_collision_shape()
+		set_physics_process(false)
+		call_deferred("_refresh_editor_preview")
+		return
 	super._ready()
 
 
-func setup(slot: int, spawn_feet: Vector2) -> void:
+func _enter_tree() -> void:
+	if Engine.is_editor_hint():
+		call_deferred("_refresh_editor_preview")
+
+
+func _notification(what: int) -> void:
+	if not Engine.is_editor_hint():
+		return
+	if what == NOTIFICATION_TRANSFORM_CHANGED and is_inside_tree() and not _editor_snapping:
+		_align_visual_to_feet()
+		call_deferred("_snap_editor_to_floor")
+
+
+func _refresh_editor_preview() -> void:
+	if not is_inside_tree():
+		return
+	_model_fitted = false
+	_fit_model_to_feet()
+	_align_visual_to_feet()
+	call_deferred("_snap_editor_to_floor")
+
+
+func _align_visual_to_feet() -> void:
+	if _visual == null:
+		return
+	# 3D playground: feet on the capsule; GPU depth buffer handles draw order (PROJECT.md §4).
+	_visual.position.y = 0.0
+
+
+## Drop the body onto world collision so designers only place X/Z in the area scene.
+func _snap_editor_to_floor() -> void:
+	if _editor_snapping or not Engine.is_editor_hint() or not is_inside_tree():
+		return
+	_editor_snapping = true
+	var space := get_world_3d().direct_space_state
+	if space != null:
+		var from := global_position + Vector3(0.0, Config.EDITOR_FLOOR_SNAP_RAY_ABOVE, 0.0)
+		var to := global_position - Vector3(0.0, Config.EDITOR_FLOOR_SNAP_RAY_BELOW, 0.0)
+		var query := PhysicsRayQueryParameters3D.create(from, to)
+		query.collision_mask = Config.COLLISION_LAYER_WORLD
+		var hit := space.intersect_ray(query)
+		if not hit.is_empty():
+			global_position.y = hit.position.y
+			_editor_snapping = false
+			return
+	snap_to_floor()
+	_editor_snapping = false
+
+
+## Place feet at spawn_feet; spawn_height should be above local floor so snap_to_floor can find it.
+func setup(slot: int, spawn_feet: Vector2, spawn_height: float = 0.0) -> void:
 	_slot = slot
 	process_priority = 1 + slot
-	global_position = Vector3(spawn_feet.x, 0.0, spawn_feet.y)
+	global_position = Vector3(spawn_feet.x, spawn_height, spawn_feet.y)
 	_last_feet = spawn_feet
 	_data = CompanionData.new()
 	_data.configure_slot(slot)
 	_data.last_progress_pos = spawn_feet
 	_model_fitted = false
 	_fit_model_to_feet()
+	_align_visual_to_feet()
+	call_deferred("snap_to_floor")
+
+
+## Keep editor-placed transform — used when the companion lives in the area scene.
+func activate(slot: int) -> void:
+	_slot = slot
+	process_priority = 1 + slot
+	_last_feet = Vector2(global_position.x, global_position.z)
+	_data = CompanionData.new()
+	_data.configure_slot(slot)
+	_data.last_progress_pos = _last_feet
+	_model_fitted = false
+	_fit_model_to_feet()
+	_align_visual_to_feet()
 	call_deferred("snap_to_floor")
 
 
 func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if GameState.mode != GameState.GameMode.GAMEPLAY:
 		velocity = Vector3.ZERO
 		_update_walk_anim(false, 0.0)
@@ -69,7 +144,6 @@ func _physics_process(delta: float) -> void:
 	_apply_horizontal_velocity(feet, delta)
 	apply_gravity(delta)
 	move_and_slide()
-	_apply_depth_sort()
 	_update_facing(move_delta)
 	_update_walk_anim(move_speed > 0.05, move_speed)
 	_last_feet = Vector2(global_position.x, global_position.z)
@@ -122,12 +196,6 @@ func get_visual_debug_state() -> Dictionary:
 	return state
 
 
-func _apply_depth_sort() -> void:
-	DepthSort.apply_to_visual(
-		_visual, Config.COMPANION_MODEL_SORT_HEIGHT, global_position.z,
-	)
-
-
 func _other_companion_feet() -> PackedVector2Array:
 	var feet := PackedVector2Array()
 	for i in GameState.companions.size():
@@ -160,9 +228,10 @@ func _fit_model_to_feet() -> void:
 
 	var fit_scale := Config.COMPANION_MODEL_TARGET_HEIGHT / local.size.y
 	_model.scale = Vector3.ONE * fit_scale
-	# Feet sit at y=0 in the GLB bind pose — lift to the depth-sorted visual root.
-	var visual_y := Config.COMPANION_MODEL_SORT_HEIGHT + global_position.z * 0.01
-	_model.position.y = visual_y - local.position.y * fit_scale
+	# Align mesh AABB bottom to the visual root, then lift slightly above the floor plane.
+	_model.position.y = (
+		-local.position.y * fit_scale + Config.COMPANION_MESH_FLOOR_CLEARANCE
+	)
 	_anim = _find_animation_player(_model)
 	_tweak_mesh_material(mesh)
 	_model_fitted = true
