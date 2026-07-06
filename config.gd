@@ -64,6 +64,24 @@ const COMPANION_BARK_DURATION := 2.5
 # Radians added to movement-facing yaw (Blender GLB bind pose faces -Z → use PI).
 const COMPANION_MODEL_YAW_OFFSET := PI
 
+# Companion navigation (NavigationAgent3D + runtime-baked NavigationRegion3D — PROJECT.md §4).
+# Navmesh bake parameters (applied to the region's NavigationMesh before baking).
+const NAV_SOURCE_GROUP := "navigation_source"
+const NAV_CELL_SIZE := 0.2
+const NAV_CELL_HEIGHT := 0.1
+const NAV_AGENT_RADIUS := 0.3
+const NAV_AGENT_HEIGHT := 0.5
+## Max vertical ledge the bake will bridge — keeps the CSG-top surfaces connected.
+const NAV_AGENT_MAX_CLIMB := 0.5
+const NAV_AGENT_MAX_SLOPE_DEG := 45.0
+# NavigationAgent3D behaviour on the companion.
+const COMPANION_NAV_PATH_DESIRED_DISTANCE := 0.4
+const COMPANION_NAV_TARGET_DESIRED_DISTANCE := 0.4
+## How often the follow goal is pushed to the agent (s); the agent repaths internally as needed.
+const COMPANION_NAV_GOAL_INTERVAL := 0.2
+## Distance from the goal at which the companion eases to a stop (avoids overshoot jitter).
+const COMPANION_NAV_ARRIVE_SLOWDOWN := 0.6
+
 # Editor floor snap for scene-placed companions (raycast above/below current XZ)
 const EDITOR_FLOOR_SNAP_RAY_ABOVE := 20.0
 const EDITOR_FLOOR_SNAP_RAY_BELOW := 50.0
