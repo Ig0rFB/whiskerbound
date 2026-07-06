@@ -1,4 +1,4 @@
-extends "res://core/world/grounded_character.gd"
+extends GroundedCharacter
 ## Lumi — cat companion follow via A* (PROJECT.md §9.2).
 
 @onready var _visual: Node3D = $Visual
@@ -39,7 +39,7 @@ func _physics_process(delta: float) -> void:
 
 	var grid: CollisionGrid = GameState.collision_grid
 	var astar: AStarGrid2D = GameState.pathfinder
-	var player: CharacterBody3D = GameState.player
+	var player: TpcPlayer = GameState.player
 	if grid == null or astar == null or player == null:
 		velocity = Vector3.ZERO
 		_update_walk_anim(false, 0.0)

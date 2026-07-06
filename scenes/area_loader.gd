@@ -12,7 +12,7 @@ const COLLISION_DEBUG_SCENE := preload("res://scenes/debug/collision_debug.tscn"
 const COMPANION_PATH_DEBUG_SCENE := preload("res://scenes/debug/companion_path_debug.tscn")
 
 var area: Node3D = null
-var player: CharacterBody3D = null
+var player: TpcPlayer = null
 var companions: Array[Node3D] = []
 var collision_debug: Node3D = null
 var companion_path_debug: Node3D = null

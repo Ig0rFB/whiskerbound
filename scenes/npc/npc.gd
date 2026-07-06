@@ -1,4 +1,4 @@
-extends "res://core/world/grounded_character.gd"
+extends GroundedCharacter
 ## NPC marker in the world — grounded body + interact dialogue (PROJECT.md §9.3).
 
 @export var npc_id: String = ""

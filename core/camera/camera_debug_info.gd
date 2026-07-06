@@ -1,3 +1,4 @@
+class_name CameraDebugInfo
 extends RefCounted
 ## Reads third-person camera stats for the debug HUD.
 

@@ -1,4 +1,5 @@
-extends "res://addons/JehenoThirdPersonController/PlayerCharacter/StateMachine/player_character_script.gd"
+class_name TpcPlayer
+extends PlayerCharacter
 ## Whiskerbound player — Jeheno third-person controller with companion + UI hooks.
 
 const GamepadInputScript := preload("res://input/gamepad.gd")

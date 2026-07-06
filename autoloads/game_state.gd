@@ -11,7 +11,7 @@ enum GameMode {
 
 var mode: GameMode = GameMode.GAMEPLAY
 var current_area_id: String = ""
-var player: CharacterBody3D = null
+var player: TpcPlayer = null
 var camera_rig: Node3D = null
 var collision_grid: CollisionGrid = null
 var pathfinder: AStarGrid2D = null

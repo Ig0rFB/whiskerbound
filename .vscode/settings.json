@@ -1,4 +1,10 @@
 {
-    "godotTools.editorPath.godot4": "/Applications/Godot.app/Contents/MacOS/Godot",
-    "godotTools.lsp.headless": true
+  "godotTools.editorPath.godot4": "/Applications/Godot.app/Contents/MacOS/Godot",
+  "godotTools.lsp.headless": true,
+  "godotTools.inlayHints.gdscript.returnType": true,
+  "godotTools.inlayHints.gdscript.parameterNames": true,
+  "godotTools.inlayHints.gdscript.enabled": true,
+  "[gdscript]": {
+    "editor.formatOnSave": false
   }
+}

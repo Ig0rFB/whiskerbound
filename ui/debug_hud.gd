@@ -1,8 +1,6 @@
 extends Control
 ## Unified debug HUD — Whiskerbound stats + third-person controller readouts (toggle H).
 
-const CameraDebugInfoScript := preload("res://core/camera/camera_debug_info.gd")
-
 const PANEL_BG := Color(0.05, 0.08, 0.12, 0.9)
 const PANEL_BORDER := Color(0.35, 0.45, 0.55, 0.9)
 const TEXT_MAIN := Color(0.94, 0.96, 1.0, 1.0)
@@ -64,7 +62,7 @@ func _draw_left_panel() -> void:
 
 
 func _draw_right_panel() -> void:
-	var player: CharacterBody3D = GameState.player
+	var player: TpcPlayer = GameState.player
 	var grid: CollisionGrid = GameState.collision_grid
 	if player == null or grid == null:
 		return
@@ -96,7 +94,7 @@ func _draw_right_panel() -> void:
 
 
 func _player_debug_lines() -> PackedStringArray:
-	var player: CharacterBody3D = GameState.player
+	var player: TpcPlayer = GameState.player
 	if player == null or not is_instance_valid(player) or not player.is_inside_tree():
 		return PackedStringArray(["State: —"])
 
@@ -182,8 +180,8 @@ func _camera_debug_lines() -> PackedStringArray:
 			"Camera pitch: —",
 		])
 	return PackedStringArray([
-		"Camera dist: %.1f" % CameraDebugInfoScript.get_distance(rig),
-		"Camera pitch: %.1f°" % CameraDebugInfoScript.get_pitch_degrees(rig),
+		"Camera dist: %.1f" % CameraDebugInfo.get_distance(rig),
+		"Camera pitch: %.1f°" % CameraDebugInfo.get_pitch_degrees(rig),
 	])
 
 

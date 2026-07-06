@@ -81,3 +81,4 @@ Mechanic and level specs come from the narrative designer. Before implementing: 
 - **Architecture & collision:** `PROJECT.md` §4 (dual-layer model), §9.0 (`GroundedCharacter`), §9.1 (Jeheno player physics)
 - 2D prototype (companion/pathfinding algorithms only, not player collision): `reference/whiskerbound-2d-prototype` locally, https://github.com/Ig0rFB/whiskerbound-2d-prototype
 - Player controller: `addons/JehenoThirdPersonController/` — **runtime dependency**; adapt via `scenes/player/tpc_player.gd`, never edit addon scripts in place. Playground map also lives in the addon (`Map/test_map_scene.tscn`).
+- **LSP / global classes:** run `godot --headless --import` after adding `class_name` scripts. Commit new `*.gd.uid` files and `.godot/global_script_class_cache.cfg`. Do **not** add `class_name` to autoload scripts — it shadows the singleton and breaks calls like `GameSettings.load()`.
