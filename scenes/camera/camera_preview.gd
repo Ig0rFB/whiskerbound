@@ -5,6 +5,8 @@ extends Node3D
 ## Picture-in-picture: enable **Little Camera Preview** plugin, select **Camera3D**,
 ## pin the panel, then select **CameraPreview** to scrub sliders while watching the view.
 
+const CameraRigScript := preload("res://scenes/camera/camera_rig.gd")
+
 var _preview_distance := 18.0
 var _preview_pitch_far := -42.0
 var _preview_pitch_near := -18.0
@@ -37,7 +39,11 @@ func _bind_rig() -> void:
 
 
 func _apply_preview_distance(value: float) -> void:
-	var clamped := clampf(value, Config.CAMERA_DISTANCE_MIN, Config.CAMERA_DISTANCE_MAX)
+	var clamped := clampf(
+		value,
+		CameraRigScript.PREVIEW_DISTANCE_MIN,
+		CameraRigScript.PREVIEW_DISTANCE_MAX,
+	)
 	if is_equal_approx(_preview_distance, clamped):
 		return
 	_preview_distance = clamped
@@ -63,9 +69,9 @@ func _apply_preview_pitch_near(value: float) -> void:
 func _load_defaults_from_config() -> void:
 	if not Engine.is_editor_hint():
 		return
-	_preview_distance = Config.CAMERA_DISTANCE
-	_preview_pitch_far = Config.CAMERA_PITCH_FAR
-	_preview_pitch_near = Config.CAMERA_PITCH_NEAR
+	_preview_distance = CameraRigScript.PREVIEW_DISTANCE
+	_preview_pitch_far = CameraRigScript.PREVIEW_PITCH_FAR
+	_preview_pitch_near = CameraRigScript.PREVIEW_PITCH_NEAR
 
 
 @export_group("Camera Tuning")

@@ -28,8 +28,7 @@ const DEFAULT_BINDINGS := {
 	],
 	"play_char_run_action": [
 		{"type": "key", "code": KEY_SHIFT},
-		{"type": "joy_button", "code": JOY_BUTTON_X},
-		{"type": "joy_button", "code": JOY_BUTTON_LEFT_SHOULDER},
+		{"type": "joy_button", "code": JOY_BUTTON_Y},
 	],
 	"play_char_jump_action": [
 		{"type": "key", "code": KEY_SPACE},
@@ -48,10 +47,12 @@ const DEFAULT_BINDINGS := {
 	"play_char_cam_zoom_in_action": [
 		{"type": "mouse", "code": MOUSE_BUTTON_WHEEL_UP},
 		{"type": "key", "code": KEY_V},
+		{"type": "joy_axis", "axis": JOY_AXIS_TRIGGER_RIGHT, "value": 1.0},
 	],
 	"play_char_cam_zoom_out_action": [
 		{"type": "mouse", "code": MOUSE_BUTTON_WHEEL_DOWN},
 		{"type": "key", "code": KEY_B},
+		{"type": "joy_axis", "axis": JOY_AXIS_TRIGGER_LEFT, "value": 1.0},
 	],
 	"play_char_change_cam_collision_action": [{"type": "key", "code": KEY_T}],
 }
@@ -62,9 +63,12 @@ static func ensure_actions_registered() -> void:
 		var action := StringName(action_name)
 		if not InputMap.has_action(action):
 			InputMap.add_action(action)
+		# Replace bindings so stale defaults (e.g. X for run) do not linger.
+		for existing in InputMap.action_get_events(action):
+			InputMap.action_erase_event(action, existing)
 		for binding in DEFAULT_BINDINGS[action_name]:
 			var event := _make_input_event(binding)
-			if event != null and not _action_has_event(action, event):
+			if event != null:
 				InputMap.action_add_event(action, event)
 
 
@@ -88,10 +92,3 @@ static func _make_input_event(binding: Dictionary) -> InputEvent:
 			axis_event.axis_value = binding["value"]
 			return axis_event
 	return null
-
-
-static func _action_has_event(action: StringName, event: InputEvent) -> bool:
-	for existing in InputMap.action_get_events(action):
-		if existing.as_text() == event.as_text():
-			return true
-	return false

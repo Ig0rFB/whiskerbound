@@ -1,5 +1,5 @@
-extends Node3D
-## NPC marker in the world — interact to open dialogue (PROJECT.md §9.3).
+extends "res://core/world/grounded_character.gd"
+## NPC marker in the world — grounded body + interact dialogue (PROJECT.md §9.3).
 
 @export var npc_id: String = ""
 @export var dialogue_id: int = -1
@@ -9,6 +9,9 @@ extends Node3D
 
 
 func _ready() -> void:
+	body_radius = Config.NPC_BODY_RADIUS
+	body_height = Config.NPC_BODY_HEIGHT
+	super._ready()
 	add_to_group("npcs")
 	if dialogue_id < 0 and not npc_id.is_empty():
 		dialogue_id = DialogueData.dialogue_id_for_npc(npc_id)
@@ -16,5 +19,10 @@ func _ready() -> void:
 		display_name = DialogueData.speaker_name(dialogue_id)
 
 
-func _process(_delta: float) -> void:
-	DepthSort.apply_to_mesh(_visual, 0.25, global_position.z)
+func _physics_process(_delta: float) -> void:
+	# Static NPCs — keep feet on moving platforms / slopes without drifting.
+	velocity.x = 0.0
+	velocity.z = 0.0
+	apply_gravity(_delta)
+	move_and_slide()
+	DepthSort.apply_to_mesh(_visual, Config.NPC_BODY_HEIGHT * 0.35, global_position.z)

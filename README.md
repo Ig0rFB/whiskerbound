@@ -1,8 +1,8 @@
 # Whiskerbound
 
-3D exploration and narrative adventure — Godot 4, soft stylised isometric camera, cat companion.
+3D exploration and narrative adventure — Godot 4, third-person controller playground, cat companion follow.
 
-**Status:** M4 complete — Elder Cat dialogue. **Next:** M5 (area transitions).
+**Status:** M6 mechanics polish — TPC playground, unified debug HUD, grounded companions/NPCs.
 
 ## Quick start
 
@@ -15,30 +15,44 @@ open -a Godot .
 
 ```bash
 bash scripts/run_smoke_test.sh
+bash scripts/run_companion_visual_test.sh
 ```
 
 ## Controls
 
+### Whiskerbound (dialogue, UI, debug)
+
 | Input | Action |
 |-------|--------|
-| WASD / Arrows | Move |
-| Left stick / D-pad | Move (gamepad) |
-| E / Space / **A** | Talk / advance dialogue |
+| E / **A** (gamepad) | Talk / advance dialogue |
 | Esc / **Start** | Pause menu |
 | M / **Select (−)** | Toggle minimap |
-| ★ (star) / H | Toggle debug HUD (colliders, stats) |
-| R | Restart area *(debug HUD on)* |
-| C | Spawn companion *(debug HUD on, max 8)* |
-| L | Reload current area *(debug HUD on)* |
+| ★ (star) / H | Toggle debug HUD |
+| R / C / L | Restart / +companion / reload area *(debug HUD on)* |
 
-Connect an **8BitDo SN30 Pro** (or any pad) via Bluetooth/USB — movement uses the left stick with a dead zone; face buttons match Xbox layout (A = confirm, Start = pause).
+### Third-person player (Jeheno TPC)
 
-## Try M4
+| Input | Action |
+|-------|--------|
+| WASD / left stick | Move |
+| Shift / **Y** | Run |
+| Space / A | Jump |
+| Mouse / right stick | Look |
+| Mouse wheel / V / B | Zoom in / out |
+| **L2 / R2** | Zoom out / in |
+| RMB / R-shoulder | Aim camera |
+| G | Swap aim shoulder |
+| T | Toggle camera collision |
+| Ctrl / L3 | Free / capture mouse |
 
-Walk south-east to the grey **Elder Cat** NPC. Press **E** to talk through three lines.
+Connect an **8BitDo SN30 Pro** or **Switch Pro** via Bluetooth/USB. On Switch-layout pads, physical **A** confirms (talk); **Y** runs.
+
+## Try it
+
+Boot into the **TPC playground** (Jeheno test map). Press **H** for the unified debug HUD (shortcuts, player state, position). Walk to the **Elder Cat** NPC — press **E** or **A** to talk.
 
 ## Stack
 
-Godot 4.7 · GDScript · Forward+
+Godot 4.7 · GDScript · Forward+ · [Jeheno Third-Person Controller](addons/JehenoThirdPersonController/)
 
-See `PROJECT.md` for architecture. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype)
+See `PROJECT.md` for architecture. Design reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype).

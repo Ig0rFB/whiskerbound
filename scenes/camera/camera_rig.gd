@@ -1,6 +1,21 @@
 @tool
 extends Node3D
-## Fixed camera rig — follows target on XZ; zoom morphs pitch toward third-person (PROJECT.md §3).
+## Legacy OOTS-style fixed camera rig — editor preview only; gameplay uses TPC spring arm.
+
+# Editor / legacy rig defaults (not used during TPC gameplay)
+const PREVIEW_DISTANCE := 10.0
+const PREVIEW_DISTANCE_MIN := 3.0
+const PREVIEW_DISTANCE_MAX := 10.0
+const PREVIEW_ZOOM_STEP := 1.5
+const PREVIEW_ZOOM_SPEED := 14.0
+const PREVIEW_FOLLOW_SPEED := 8.0
+const PREVIEW_PITCH_FAR := -42.0
+const PREVIEW_PITCH_NEAR := -15.0
+const PREVIEW_YAW := 0.0
+const PREVIEW_CHEST_FAR := 0.9
+const PREVIEW_CHEST_NEAR := 1.3
+const PREVIEW_FOV_FAR := 38.0
+const PREVIEW_FOV_NEAR := 42.0
 
 var _camera: Camera3D
 var _target: Node3D = null
@@ -14,12 +29,12 @@ var _preview_pitch_near := -18.0
 func _ready() -> void:
 	_ensure_camera()
 	if Engine.is_editor_hint():
-		_preview_pitch_far = Config.CAMERA_PITCH_FAR
-		_preview_pitch_near = Config.CAMERA_PITCH_NEAR
+		_preview_pitch_far = PREVIEW_PITCH_FAR
+		_preview_pitch_near = PREVIEW_PITCH_NEAR
 		_apply_preview_pose()
 		_try_bind_preview_target()
 	else:
-		_distance = Config.CAMERA_DISTANCE
+		_distance = PREVIEW_DISTANCE
 		_apply_zoom_pose()
 		if _camera:
 			_camera.current = true
@@ -70,7 +85,7 @@ func _process(delta: float) -> void:
 	if _target == null:
 		return
 
-	var t := 1.0 if _snap_next else clampf(Config.CAMERA_FOLLOW_SPEED * delta, 0.0, 1.0)
+	var t := 1.0 if _snap_next else clampf(PREVIEW_FOLLOW_SPEED * delta, 0.0, 1.0)
 	_snap_next = false
 	_apply_follow(t)
 
@@ -78,7 +93,7 @@ func _process(delta: float) -> void:
 func _poll_zoom_input(delta: float) -> void:
 	var axis := InputActions.camera_zoom_axis
 	if absf(axis) > 0.001:
-		_adjust_distance(axis * Config.CAMERA_ZOOM_SPEED * delta)
+		_adjust_distance(axis * PREVIEW_ZOOM_SPEED * delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -90,9 +105,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	var delta_dist := 0.0
 	match event.button_index:
 		MOUSE_BUTTON_WHEEL_UP:
-			delta_dist = -Config.CAMERA_ZOOM_STEP
+			delta_dist = -PREVIEW_ZOOM_STEP
 		MOUSE_BUTTON_WHEEL_DOWN:
-			delta_dist = Config.CAMERA_ZOOM_STEP
+			delta_dist = PREVIEW_ZOOM_STEP
 		_:
 			return
 
@@ -166,40 +181,40 @@ func _apply_follow(weight: float) -> void:
 
 
 func _distance_min() -> float:
-	return Config.CAMERA_DISTANCE_MIN if not Engine.is_editor_hint() else 5.0
+	return PREVIEW_DISTANCE_MIN if not Engine.is_editor_hint() else 5.0
 
 
 func _distance_max() -> float:
-	return Config.CAMERA_DISTANCE_MAX if not Engine.is_editor_hint() else 26.0
+	return PREVIEW_DISTANCE_MAX if not Engine.is_editor_hint() else 26.0
 
 
 func _pitch_far() -> float:
 	if Engine.is_editor_hint():
 		return _preview_pitch_far
-	return Config.CAMERA_PITCH_FAR
+	return PREVIEW_PITCH_FAR
 
 
 func _pitch_near() -> float:
 	if Engine.is_editor_hint():
 		return _preview_pitch_near
-	return Config.CAMERA_PITCH_NEAR
+	return PREVIEW_PITCH_NEAR
 
 
 func _yaw() -> float:
-	return Config.CAMERA_YAW if not Engine.is_editor_hint() else 0.0
+	return PREVIEW_YAW if not Engine.is_editor_hint() else 0.0
 
 
 func _chest_far() -> float:
-	return Config.CAMERA_CHEST_HEIGHT_FAR if not Engine.is_editor_hint() else 0.9
+	return PREVIEW_CHEST_FAR if not Engine.is_editor_hint() else 0.9
 
 
 func _chest_near() -> float:
-	return Config.CAMERA_CHEST_HEIGHT_NEAR if not Engine.is_editor_hint() else 1.3
+	return PREVIEW_CHEST_NEAR if not Engine.is_editor_hint() else 1.3
 
 
 func _fov_far() -> float:
-	return Config.CAMERA_FOV if not Engine.is_editor_hint() else 38.0
+	return PREVIEW_FOV_FAR if not Engine.is_editor_hint() else 38.0
 
 
 func _fov_near() -> float:
-	return Config.CAMERA_FOV_NEAR if not Engine.is_editor_hint() else 42.0
+	return PREVIEW_FOV_NEAR if not Engine.is_editor_hint() else 42.0

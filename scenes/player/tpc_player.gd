@@ -5,6 +5,7 @@ const GamepadInputScript := preload("res://input/gamepad.gd")
 
 const LOOK_SENSITIVITY := 9.0
 const LOOK_DEADZONE := 0.18
+const WHEEL_ZOOM_STEP := 0.35
 
 var feet_velocity: Vector2 = Vector2.ZERO
 
@@ -13,7 +14,9 @@ var _last_feet: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	super._ready()
+	collision_mask = Config.COLLISION_LAYER_WORLD | Config.COLLISION_LAYER_CHARACTER
 	_disable_embedded_hud()
+	_disable_addon_camera_zoom()
 	call_deferred("_bind_camera_to_game_state")
 	call_deferred("capture_camera_mouse")
 
@@ -26,10 +29,17 @@ func _disable_embedded_hud() -> void:
 	embedded_hud.process_mode = Node.PROCESS_MODE_DISABLED
 
 
+func _disable_addon_camera_zoom() -> void:
+	# Jeheno zoom misses discrete mouse-wheel ticks — handled in _process below.
+	if cam_holder != null:
+		cam_holder.zoom_speed = 0.0
+
+
 func _process(delta: float) -> void:
 	super._process(delta)
 	if GameState.mode == GameState.GameMode.GAMEPLAY:
 		_apply_gamepad_look(delta)
+		_poll_camera_zoom(delta)
 
 
 func _physics_process(delta: float) -> void:
@@ -129,3 +139,30 @@ func _apply_gamepad_look(delta: float) -> void:
 
 	var scale := LOOK_SENSITIVITY * delta * cam_holder.mouse_sensibility * 100.0
 	cam_holder.rotate_from_vector(look * scale)
+
+
+func _poll_camera_zoom(delta: float) -> void:
+	if cam_holder == null or GameState.mode != GameState.GameMode.GAMEPLAY:
+		return
+	var spring := cam_holder.get_node_or_null("%SpringArm3D") as SpringArm3D
+	if spring == null:
+		return
+
+	var zoom_speed := 10.0
+	var axis := Input.get_axis(cam_holder.cam_zoom_in_action, cam_holder.cam_zoom_out_action)
+	axis -= InputActions.camera_zoom_axis
+
+	if Input.is_action_just_pressed(cam_holder.cam_zoom_in_action):
+		axis -= WHEEL_ZOOM_STEP
+	if Input.is_action_just_pressed(cam_holder.cam_zoom_out_action):
+		axis += WHEEL_ZOOM_STEP
+
+	if absf(axis) < 0.001:
+		return
+
+	spring.spring_length += axis * zoom_speed * delta
+	spring.spring_length = clampf(
+		spring.spring_length,
+		cam_holder.min_spring_length,
+		cam_holder.max_spring_length,
+	)

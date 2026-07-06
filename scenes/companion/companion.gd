@@ -1,7 +1,5 @@
-extends Node3D
+extends "res://core/world/grounded_character.gd"
 ## Lumi — cat companion follow via A* (PROJECT.md §9.2).
-
-const _GroundQuery = preload("res://core/world/ground_query.gd")
 
 @onready var _visual: Node3D = $Visual
 @onready var _model: Node3D = $Visual/Model
@@ -14,6 +12,12 @@ var _last_feet: Vector2 = Vector2.ZERO
 var _model_fitted := false
 
 
+func _ready() -> void:
+	body_radius = Config.COMPANION_BODY_RADIUS
+	body_height = Config.COMPANION_BODY_HEIGHT
+	super._ready()
+
+
 func setup(slot: int, spawn_feet: Vector2) -> void:
 	_slot = slot
 	process_priority = 1 + slot
@@ -24,17 +28,12 @@ func setup(slot: int, spawn_feet: Vector2) -> void:
 	_data.last_progress_pos = spawn_feet
 	_model_fitted = false
 	_fit_model_to_feet()
-	call_deferred("_snap_spawn_to_ground", spawn_feet)
-
-
-func _snap_spawn_to_ground(spawn_feet: Vector2) -> void:
-	var ground_y := _GroundQuery.ground_y_at(self, spawn_feet.x, spawn_feet.y)
-	global_position = Vector3(spawn_feet.x, ground_y, spawn_feet.y)
-	_apply_depth_sort()
+	call_deferred("snap_to_floor")
 
 
 func _physics_process(delta: float) -> void:
 	if GameState.mode != GameState.GameMode.GAMEPLAY:
+		velocity = Vector3.ZERO
 		_update_walk_anim(false, 0.0)
 		return
 
@@ -42,6 +41,7 @@ func _physics_process(delta: float) -> void:
 	var astar: AStarGrid2D = GameState.pathfinder
 	var player: CharacterBody3D = GameState.player
 	if grid == null or astar == null or player == null:
+		velocity = Vector3.ZERO
 		_update_walk_anim(false, 0.0)
 		return
 
@@ -66,13 +66,25 @@ func _physics_process(delta: float) -> void:
 	)
 	var move_delta := feet - previous_feet
 	var move_speed := move_delta.length() / delta if delta > 0.0 else 0.0
-	feet = _GroundQuery.clamp_feet_move(self, previous_feet, feet, 0.22)
-	var ground_y := _GroundQuery.ground_y_at(self, feet.x, feet.y)
-	global_position = Vector3(feet.x, ground_y, feet.y)
+	_apply_horizontal_velocity(feet, delta)
+	apply_gravity(delta)
+	move_and_slide()
 	_apply_depth_sort()
 	_update_facing(move_delta)
 	_update_walk_anim(move_speed > 0.05, move_speed)
-	_last_feet = feet
+	_last_feet = Vector2(global_position.x, global_position.z)
+
+
+func _apply_horizontal_velocity(target_feet: Vector2, delta: float) -> void:
+	var offset := target_feet - Vector2(global_position.x, global_position.z)
+	if offset.length_squared() < 0.0001 or delta <= 0.0:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		return
+	var speed := minf(offset.length() / delta, Config.COMPANION_SPEED)
+	var direction := offset.normalized()
+	velocity.x = direction.x * speed
+	velocity.z = direction.y * speed
 
 
 func get_debug_path() -> PackedVector2Array:
@@ -98,6 +110,7 @@ func get_visual_debug_state() -> Dictionary:
 		"model_scale": _model.scale if _model else Vector3.ZERO,
 		"model_pos": _model.position if _model else Vector3.ZERO,
 		"visual_pos": _visual.position if _visual else Vector3.ZERO,
+		"on_floor": is_on_floor(),
 	}
 	if mesh != null:
 		state["mesh_aabb"] = _global_mesh_aabb(mesh)

@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M4 complete — **M5 area transitions** next  
+> **Status**: M6 in progress — TPC playground, grounded actors, debug HUD  
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -79,11 +79,11 @@ Biomes may override palette but must keep **interactable colours consistent** ac
 
 ## 3. Camera specification
 
-### Mode
+### Mode (gameplay — M6)
 
-**Fixed-angle perspective camera** — NOT true orthographic. Perspective gives depth cues for cliffs, water, and character height while keeping a raised, head-on *feel*.
+**Third-person spring-arm camera** via Jeheno TPC addon (`CameraHolder` + `SpringArm3D`). The player orbits the camera with mouse / right stick; scroll wheel, V/B keys, and **L2/R2** triggers adjust zoom.
 
-This matches Pokémon 3D overworlds and Order of the Sinking Star: 3D models, locked camera, **axis-aligned** (map edges parallel to screen — not rotated 45° like classic RTS isometric).
+Legacy **fixed-angle OOTS-style rig** (`scenes/camera/camera_rig.tscn`) remains for editor preview only — not used during gameplay.
 
 ### Coordinate system (Godot default)
 
@@ -94,7 +94,18 @@ This matches Pokémon 3D overworlds and Order of the Sinking Star: 3D models, lo
 
 Map the 2D prototype convention (x, y tile coords) → 3D world (x, 0, z) where `z = tile_y`.
 
-### Camera rig values (V1 defaults — tune in editor, document final values)
+### Grounded actors (M6 default)
+
+All companions and NPCs extend `core/world/grounded_character.gd` (`CharacterBody3D`):
+
+- Capsule collision aligned to feet (`Config.CHARACTER_*` / `COMPANION_*` / `NPC_*`)
+- Gravity + `move_and_slide()` + floor snap (same principle as the TPC player)
+- Collision layer **2** (characters), mask **1** (world CSG/mesh)
+- Player TPC also masks layer 2 so NPCs block movement
+
+New spawned characters should inherit this base unless a scene overrides body size.
+
+### Legacy OOTS camera rig (editor only)
 
 ```
 Camera3D (child of CameraRig node):
@@ -292,7 +303,7 @@ whiskerbound/
 ├── core/                        # pure logic — no Node, no autoload refs
 │   ├── types.gd                 # Direction8, shared enums
 │   ├── movement/                # velocity, wall slide, player collider
-│   ├── world/                   # collision grid
+│   ├── world/                   # collision grid, grounded_character base
 │   ├── pathfinding/             # AStarGrid2D wrapper (XZ plane)
 │   ├── companion/               # follow AI, data, collider
 │   ├── interaction/             # NPC proximity
@@ -307,14 +318,15 @@ whiskerbound/
 │   ├── camera/
 │   │   └── camera_rig.tscn      # Camera3D with fixed rotation
 │   ├── player/
-│   │   └── player.tscn          # CharacterBody3D + placeholder mesh
+│   │   └── player.tscn          # Jeheno TPC + tpc_player.gd adapter
 │   ├── companion/
 │   │   └── companion.tscn
 │   ├── npc/
 │   │   └── npc.tscn
 │   └── areas/
 │       ├── area_base.tscn       # template: ground, collision, spawn markers
-│       ├── village_green.tscn   # first playable area
+│       ├── tpc_playground.tscn  # Jeheno test map + Elder Cat (default boot)
+│       ├── village_green.tscn   # legacy flat grid area (area_loader)
 │       └── forest_path.tscn     # second area (transitions)
 ├── ui/
 │   ├── hud.tscn
@@ -524,11 +536,14 @@ Build in order. Each milestone = playable build.
 
 ### M6: Mechanics polish
 
+- [x] TPC playground as default dev area
+- [x] Unified debug HUD (H toggle, shortcuts, player state)
+- [x] Grounded companions + NPCs (`GroundedCharacter`)
 - [ ] Walk all paths without snagging (manual checklist)
 - [ ] Camera clamp at area edges
-- [ ] Interact prompt UI
-- [ ] Player faces NPC on talk
-- [ ] Minimap with player dot
+- [x] Interact prompt UI (E / A)
+- [x] Player faces NPC on talk
+- [x] Minimap with player dot
 - [ ] Fade timing tuned
 
 **M6 exit criteria**: spawn → explore village → transition to forest → return; talk to Elder Cat; companion follows throughout; no collision snags.
