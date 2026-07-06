@@ -12,6 +12,8 @@ static func find_nearest_npc(player_feet: Vector2, npcs: Array) -> Node3D:
 	for npc in npcs:
 		if npc == null or not is_instance_valid(npc):
 			continue
+		if not (npc is Node3D) or not (npc as Node3D).is_inside_tree():
+			continue
 		var npc_feet := Vector2(npc.global_position.x, npc.global_position.z)
 		var dist_sq := player_feet.distance_squared_to(npc_feet)
 		if dist_sq <= radius_sq and dist_sq < best_dist_sq:

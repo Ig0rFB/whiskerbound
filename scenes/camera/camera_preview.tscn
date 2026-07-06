@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3 uid="uid://dfoqmm7ssifny"]
+
+[ext_resource type="Script" path="res://scenes/camera/camera_preview.gd" id="1_preview"]
+[ext_resource type="PackedScene" uid="uid://c8rigcamera01" path="res://scenes/camera/camera_rig.tscn" id="2_rig"]
+[ext_resource type="PackedScene" uid="uid://b7player000001" path="res://scenes/player/player.tscn" id="3_player"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_tile"]
+size = Vector3(1, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
+shading_mode = 0
+albedo_color = Color(0.486275, 0.721569, 0.486275, 1)
+
+[node name="CameraPreview" type="Node3D"]
+script = ExtResource("1_preview")
+
+[node name="Ground" type="Node3D" parent="."]
+
+[node name="Tile" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("BoxMesh_tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="Tile2" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+mesh = SubResource("BoxMesh_tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="Tile3" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0)
+mesh = SubResource("BoxMesh_tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="Tile4" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+mesh = SubResource("BoxMesh_tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="Tile5" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+mesh = SubResource("BoxMesh_tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_ground")
+
+[node name="PlayerTarget" type="Marker3D" parent="."]
+
+[node name="PlayerStandIn" parent="PlayerTarget" instance=ExtResource("3_player")]
+
+[node name="CameraRig" parent="." instance=ExtResource("2_rig")]
+
+[editable path="CameraRig"]

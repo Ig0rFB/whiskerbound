@@ -24,11 +24,14 @@ static func update(
 	collider: Rect2,
 	slot: int,
 	delta: float,
+	other_feet: PackedVector2Array = PackedVector2Array(),
 ) -> Vector2:
 	if grid.center_cell_blocked(feet_pos.x, feet_pos.y):
 		data.clear_path()
 		data.stuck_timer = 0.0
-		return teleport_beside_player(player_pos, player_velocity, grid, collider, slot)
+		return teleport_beside_player(
+			player_pos, player_velocity, grid, collider, slot, other_feet,
+		)
 
 	var follow_dist := follow_distance(slot)
 	var goal := _path_goal(player_pos, player_velocity, data)
@@ -61,26 +64,30 @@ static func update(
 	var result := feet_pos
 	if data.path_index < data.path.size():
 		var target: Vector2 = data.path[data.path_index]
-		result = _move_toward(feet_pos, target, grid, collider, delta)
+		result = _move_toward(feet_pos, target, grid, collider, delta, other_feet)
 		if result.distance_squared_to(target) < WAYPOINT_REACH_DIST_SQ:
 			data.path_index += 1
 	else:
-		result = _move_toward(feet_pos, goal, grid, collider, delta)
+		result = _move_toward(feet_pos, goal, grid, collider, delta, other_feet)
 
 	var still_chasing := result.distance_squared_to(goal) > WAYPOINT_REACH_DIST_SQ
 	if _track_stuck(data, result, delta, still_chasing):
 		data.clear_path()
 		data.stuck_timer = 0.0
-		return teleport_beside_player(player_pos, player_velocity, grid, collider, slot)
+		return teleport_beside_player(
+			player_pos, player_velocity, grid, collider, slot, other_feet,
+		)
 
 	if _overlaps_player(result, player_pos, collider):
 		if player_idle:
 			data.clear_path()
 			data.stuck_timer = 0.0
-			return teleport_beside_player(player_pos, player_velocity, grid, collider, slot)
+			return teleport_beside_player(
+				player_pos, player_velocity, grid, collider, slot, other_feet,
+			)
 		return feet_pos
 
-	return result
+	return nudge_from_companions(result, collider, slot, other_feet, grid)
 
 
 ## A* goal — player position with velocity lead and per-slot spread (2D prototype feel).
@@ -106,13 +113,16 @@ static func spawn_beside_player(
 	collider: Rect2,
 	slot: int = 0,
 	player_velocity: Vector2 = Vector2.ZERO,
+	other_feet: PackedVector2Array = PackedVector2Array(),
 ) -> Vector2:
 	var angle := float(slot) * 1.2
 	var preferred := player_pos + Vector2(cos(angle), sin(angle)) * 1.2
 	var preferred_dir := Vector2.ZERO
 	if player_velocity.length_squared() > 0.01:
 		preferred_dir = -player_velocity.normalized()
-	return find_clear_pos_near(grid, preferred, collider, slot, false, preferred_dir)
+	return find_clear_pos_near(
+		grid, preferred, collider, slot, false, preferred_dir, other_feet,
+	)
 
 
 static func find_clear_pos_near(
@@ -122,8 +132,9 @@ static func find_clear_pos_near(
 	slot: int,
 	include_origin: bool,
 	preferred_dir: Vector2 = Vector2.ZERO,
+	other_feet: PackedVector2Array = PackedVector2Array(),
 ) -> Vector2:
-	if include_origin and not grid.entity_blocked(near.x, near.y, collider):
+	if include_origin and _is_clear(grid, near, collider, other_feet):
 		return near
 
 	var slot_skew := float(slot) * 0.2
@@ -145,7 +156,7 @@ static func find_clear_pos_near(
 				near.x + float(offset.x) * dist - slot_skew,
 				near.y + float(offset.y) * dist,
 			)
-			if not grid.entity_blocked(candidate.x, candidate.y, collider):
+			if _is_clear(grid, candidate, collider, other_feet):
 				return candidate
 
 	return near
@@ -157,8 +168,11 @@ static func teleport_beside_player(
 	grid: CollisionGrid,
 	collider: Rect2,
 	slot: int,
+	other_feet: PackedVector2Array = PackedVector2Array(),
 ) -> Vector2:
-	return spawn_beside_player(player_pos, grid, collider, slot, player_velocity)
+	return spawn_beside_player(
+		player_pos, grid, collider, slot, player_velocity, other_feet,
+	)
 
 
 static func _try_repath(
@@ -182,12 +196,103 @@ static func _move_toward(
 	grid: CollisionGrid,
 	collider: Rect2,
 	delta: float,
+	other_feet: PackedVector2Array,
 ) -> Vector2:
 	var to_target := target - feet_pos
 	if to_target.length_squared() < WAYPOINT_REACH_DIST_SQ:
 		return feet_pos
 	var velocity := to_target.normalized() * SPEED
-	return Movement.apply_velocity(grid, feet_pos, velocity, collider, delta)
+	return _apply_companion_velocity(grid, feet_pos, velocity, collider, delta, other_feet)
+
+
+static func _apply_companion_velocity(
+	grid: CollisionGrid,
+	feet_pos: Vector2,
+	velocity: Vector2,
+	collider: Rect2,
+	delta: float,
+	other_feet: PackedVector2Array,
+) -> Vector2:
+	var result := feet_pos
+	var delta_pos := velocity * delta
+
+	var new_x := result.x + delta_pos.x
+	if _is_clear(grid, Vector2(new_x, result.y), collider, other_feet):
+		result.x = new_x
+
+	var new_z := result.y + delta_pos.y
+	if _is_clear(grid, Vector2(result.x, new_z), collider, other_feet):
+		result.y = new_z
+
+	return result
+
+
+static func _is_clear(
+	grid: CollisionGrid,
+	feet_pos: Vector2,
+	collider: Rect2,
+	other_feet: PackedVector2Array,
+) -> bool:
+	if grid.entity_blocked(feet_pos.x, feet_pos.y, collider):
+		return false
+	return not blocked_by_companions(feet_pos, collider, other_feet)
+
+
+static func blocked_by_companions(
+	feet_pos: Vector2,
+	collider: Rect2,
+	other_feet: PackedVector2Array,
+) -> bool:
+	var other_col := CompanionCollider.feet_rect()
+	for other in other_feet:
+		if feet_overlap(feet_pos, collider, other, other_col):
+			return true
+	return false
+
+
+static func feet_overlap(
+	a_pos: Vector2,
+	a_col: Rect2,
+	b_pos: Vector2,
+	b_col: Rect2,
+) -> bool:
+	var a_rect := a_col
+	a_rect.position += a_pos
+	var b_rect := b_col
+	b_rect.position += b_pos
+	return a_rect.intersects(b_rect)
+
+
+## Push apart when companions stack — keeps core free of GameState references.
+static func nudge_from_companions(
+	feet_pos: Vector2,
+	collider: Rect2,
+	slot: int,
+	other_feet: PackedVector2Array,
+	grid: CollisionGrid,
+) -> Vector2:
+	var result := feet_pos
+	var other_col := CompanionCollider.feet_rect()
+	var min_sep := CompanionCollider.FEET_RADIUS * 2.0 + 0.06
+
+	for i in other_feet.size():
+		var other := other_feet[i]
+		var delta := result - other
+		if delta.length_squared() >= min_sep * min_sep:
+			continue
+		var push_dir := delta
+		if push_dir.length_squared() < 0.0001:
+			push_dir = Vector2(
+				cos(float(slot) * 1.2 + float(i)),
+				sin(float(slot) * 1.2 + float(i)),
+			)
+		result = other + push_dir.normalized() * min_sep
+
+	if grid.entity_blocked(result.x, result.y, collider):
+		return feet_pos
+	if blocked_by_companions(result, collider, other_feet):
+		return feet_pos
+	return result
 
 
 static func _track_stuck(

@@ -15,7 +15,8 @@ var idle_ring_offset: Vector2 = Vector2.ZERO
 func configure_slot(slot: int) -> void:
 	var angle := float(slot) * 1.2
 	slot_lateral_offset = sin(angle) * Config.COMPANION_SLOT_LATERAL
-	idle_ring_offset = Vector2(cos(angle), sin(angle)) * 0.5
+	var ring := CompanionLogic.follow_distance(slot) * 0.55
+	idle_ring_offset = Vector2(cos(angle), sin(angle)) * ring
 
 
 func clear_path() -> void:

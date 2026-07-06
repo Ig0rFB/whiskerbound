@@ -6,9 +6,20 @@ const MinimapLogicScript := preload("res://core/ui/minimap_logic.gd")
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(Config.MINIMAP_PANEL_SIZE, Config.MINIMAP_PANEL_SIZE)
+	_update_minimap_size()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_update_visibility()
+	GameSettings.settings_changed.connect(_on_settings_changed)
+
+
+func _on_settings_changed() -> void:
+	_update_minimap_size()
+	queue_redraw()
+
+
+func _update_minimap_size() -> void:
+	var panel_size := float(GameSettings.minimap_panel_size)
+	custom_minimum_size = Vector2(panel_size, panel_size)
 
 
 func _process(_delta: float) -> void:
@@ -26,7 +37,7 @@ func _draw() -> void:
 	if grid == null:
 		return
 
-	var panel_size := float(Config.MINIMAP_PANEL_SIZE)
+	var panel_size := float(GameSettings.minimap_panel_size)
 	var outer := panel_size + BORDER * 2.0
 	draw_rect(Rect2(Vector2.ZERO, Vector2(outer, outer)), Color(0.05, 0.08, 0.12, 0.92))
 	draw_rect(Rect2(Vector2(BORDER, BORDER), Vector2(panel_size, panel_size)), Color(0.12, 0.16, 0.2, 1.0))

@@ -26,7 +26,7 @@ bash scripts/run_smoke_test.sh
 | E / Space / **A** | Talk / advance dialogue |
 | Esc / **Start** | Pause menu |
 | M / **Select (−)** | Toggle minimap |
-| H | Toggle debug HUD (colliders, stats) |
+| ★ (star) / H | Toggle debug HUD (colliders, stats) |
 | R | Restart area *(debug HUD on)* |
 | C | Spawn companion *(debug HUD on, max 8)* |
 | L | Reload current area *(debug HUD on)* |

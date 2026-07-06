@@ -1,6 +1,8 @@
 class_name GridPathfinding
 ## AStarGrid2D wrapper for area collision grids.
 
+const CollisionGridScript := preload("res://core/world/collision_grid.gd")
+
 
 static func build_from_grid(grid: CollisionGrid) -> AStarGrid2D:
 	var astar := AStarGrid2D.new()
@@ -21,7 +23,7 @@ static func build_from_grid(grid: CollisionGrid) -> AStarGrid2D:
 
 
 static func world_to_cell(world_pos: Vector2) -> Vector2i:
-	return CollisionGrid.world_to_cell(world_pos)
+	return CollisionGridScript.world_to_cell(world_pos)
 
 
 static func find_path(
@@ -48,5 +50,5 @@ static func find_path(
 
 	var waypoints := PackedVector2Array()
 	for cell in id_path:
-		waypoints.append(CollisionGrid.cell_center(cell, grid.cell_size))
+		waypoints.append(CollisionGridScript.cell_center(cell, grid.cell_size))
 	return waypoints

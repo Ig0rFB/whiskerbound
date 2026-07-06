@@ -1,11 +1,15 @@
 class_name GamepadInput
 extends RefCounted
 ## Gamepad polling — mirrors 2D prototype input/gamepad.odin (SN30 Pro / generic pads).
+## Confirm/cancel use physical face positions: Switch Pro on macOS swaps Godot's A/B labels.
 
 const DEVICE := 0
 
 var _was_connected := false
 var _prev_held: Dictionary = {}
+var _confirm_button: JoyButton = JOY_BUTTON_A
+var _cancel_button: JoyButton = JOY_BUTTON_B
+var _star_button: JoyButton = Config.GAMEPAD_STAR_BUTTON
 
 
 static func _deadzone() -> float:
@@ -28,6 +32,7 @@ func poll_connection() -> void:
 		return
 	if not _was_connected:
 		var name := Input.get_joy_name(device)
+		_apply_button_layout(name)
 		if name.is_empty():
 			print("Gamepad connected (device ", device, ")")
 		else:
@@ -78,14 +83,42 @@ func button_pressed(button: JoyButton) -> bool:
 	return down and not was_down
 
 
+## Physical A (east on Switch) — interact, menu confirm.
+func confirm_pressed() -> bool:
+	return button_pressed(_confirm_button)
+
+
+## Physical B (south on Switch) — back / menu cancel.
+func cancel_pressed() -> bool:
+	return button_pressed(_cancel_button)
+
+
+## Star / capture (8BitDo bottom-left) — debug HUD toggle on Switch mode.
+func star_pressed() -> bool:
+	return button_pressed(_star_button)
+
+
+## L2 = zoom out (+), R2 = zoom in (−). Triggers are normalised to 0..1.
+func zoom_axis() -> float:
+	var device := active_device()
+	if device < 0:
+		return 0.0
+	var l2 := _normalise_trigger(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT))
+	var r2 := _normalise_trigger(Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT))
+	if l2 <= _deadzone() and r2 <= _deadzone():
+		return 0.0
+	return l2 - r2
+
+
 func end_frame() -> void:
 	var device := active_device()
 	if device < 0:
 		_prev_held.clear()
 		return
 	for button in [
-		JOY_BUTTON_A,
-		JOY_BUTTON_B,
+		_confirm_button,
+		_cancel_button,
+		_star_button,
 		JOY_BUTTON_X,
 		JOY_BUTTON_Y,
 		JOY_BUTTON_START,
@@ -93,6 +126,18 @@ func end_frame() -> void:
 	]:
 		var key := _button_key(device, button)
 		_prev_held[key] = Input.is_joy_button_pressed(device, button)
+
+
+func _apply_button_layout(joy_name: String) -> void:
+	var lower := joy_name.to_lower()
+	# Switch Pro / SN30 Pro (Switch mode): Godot A/B are Xbox-labelled; physical A is east.
+	if "switch" in lower or "nintendo" in lower or "8bitdo" in lower:
+		_confirm_button = JOY_BUTTON_B
+		_cancel_button = JOY_BUTTON_A
+	else:
+		_confirm_button = JOY_BUTTON_A
+		_cancel_button = JOY_BUTTON_B
+	_star_button = Config.GAMEPAD_STAR_BUTTON
 
 
 static func _button_key(device: int, button: JoyButton) -> String:
@@ -105,3 +150,10 @@ static func _apply_stick_deadzone(vec: Vector2) -> Vector2:
 		return Vector2.ZERO
 	var scaled := (vec.length() - deadzone) / (1.0 - deadzone)
 	return vec.normalized() * scaled
+
+
+static func _normalise_trigger(value: float) -> float:
+	if value >= 0.0:
+		return clampf(value, 0.0, 1.0)
+	# Some pads report triggers as −1 (rest) → +1 (pressed).
+	return clampf((value + 1.0) * 0.5, 0.0, 1.0)

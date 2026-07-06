@@ -11,24 +11,31 @@ config_version=5
 [application]
 
 config/name="Whiskerbound"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="uid://1mainscene01"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 Config="*res://config.gd"
+GameSettings="*res://autoloads/game_settings.gd"
 GameState="*res://autoloads/game_state.gd"
 Events="*res://autoloads/events.gd"
 InputActions="*res://input/input_actions.gd"
+SaveGame="*res://core/save/save_game.gd"
 
 [display]
 
-window/size/viewport_width=1920
-window/size/viewport_height=1080
+window/size/viewport_width=2560
+window/size/viewport_height=1440
+window/size/window_width_override=2560
+window/size/window_height_override=1440
 window/stretch/mode="viewport"
-window/stretch/aspect="keep"
-window/stretch/scale_mode="integer"
+window/stretch/scale_mode="fractional"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/anthonyec.camera_preview/plugin.cfg")
 
 [input]
 

@@ -13,6 +13,7 @@ func _ready() -> void:
 	_collision_grid = _build_collision_grid()
 	_build_ground_tiles()
 	_build_border_walls()
+	_build_physics_floor()
 	_build_trees()
 
 
@@ -75,6 +76,29 @@ func _build_border_walls() -> void:
 	for z in range(AREA_HEIGHT):
 		_add_wall(wall_mesh, wall_mat, -1, z)
 		_add_wall(wall_mesh, wall_mat, AREA_WIDTH, z)
+
+
+func _build_physics_floor() -> void:
+	var floor_body := StaticBody3D.new()
+	floor_body.name = "PhysicsFloor"
+	floor_body.collision_layer = 1
+	floor_body.collision_mask = 0
+
+	var shape_node := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(
+		float(AREA_WIDTH) * Config.GRID_CELL,
+		0.4,
+		float(AREA_HEIGHT) * Config.GRID_CELL,
+	)
+	shape_node.shape = box
+	shape_node.position = Vector3(
+		float(AREA_WIDTH) * Config.GRID_CELL * 0.5,
+		-0.2,
+		float(AREA_HEIGHT) * Config.GRID_CELL * 0.5,
+	)
+	floor_body.add_child(shape_node)
+	add_child(floor_body)
 
 
 func _add_wall(mesh: BoxMesh, mat: StandardMaterial3D, x: int, z: int) -> void:

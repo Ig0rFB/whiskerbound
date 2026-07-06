@@ -11,6 +11,9 @@ extends CanvasLayer
 func _ready() -> void:
 	_pause_menu.resume_requested.connect(_on_pause_resume)
 	_pause_menu.quit_requested.connect(_on_pause_quit)
+	_pause_menu.save_game_requested.connect(_on_pause_save_game)
+	_pause_menu.load_game_requested.connect(_on_pause_load_game)
+	GameSettings.settings_changed.connect(_layout_minimap)
 	_layout_minimap()
 
 
@@ -35,7 +38,10 @@ func _physics_process(_delta: float) -> void:
 
 func _handle_pause_input() -> void:
 	if GameState.mode == GameState.GameMode.PAUSE:
-		if InputActions.pause_pressed or InputActions.interact_pressed:
+		_pause_menu.process_gamepad()
+		if InputActions.pause_pressed or InputActions.back_pressed:
+			if _pause_menu.handle_back():
+				return
 			_close_pause()
 		return
 
@@ -66,15 +72,17 @@ func _handle_debug_shortcuts() -> void:
 
 
 func _layout_minimap() -> void:
+	var panel_size := GameSettings.minimap_panel_size
 	_minimap.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_minimap.offset_left = -(Config.MINIMAP_PANEL_SIZE + Config.MINIMAP_MARGIN + 4)
+	_minimap.offset_left = -(panel_size + Config.MINIMAP_MARGIN + 4)
 	_minimap.offset_top = Config.MINIMAP_MARGIN
 	_minimap.offset_right = -Config.MINIMAP_MARGIN
-	_minimap.offset_bottom = Config.MINIMAP_MARGIN + Config.MINIMAP_PANEL_SIZE + 4
+	_minimap.offset_bottom = Config.MINIMAP_MARGIN + panel_size + 4
 
 
 func _open_pause() -> void:
 	GameState.mode = GameState.GameMode.PAUSE
+	_set_player_camera_input(false)
 	_pause_menu.open()
 	_interact_prompt.set_show_prompt(false)
 
@@ -82,6 +90,7 @@ func _open_pause() -> void:
 func _close_pause() -> void:
 	GameState.mode = GameState.GameMode.GAMEPLAY
 	_pause_menu.close()
+	_set_player_camera_input(true)
 
 
 func _on_pause_resume() -> void:
@@ -92,9 +101,34 @@ func _on_pause_quit() -> void:
 	get_tree().quit()
 
 
+func _on_pause_save_game() -> void:
+	var ok := SaveGame.write_save()
+	if ok:
+		_pause_menu.set_status_message("Game saved.")
+	else:
+		_pause_menu.set_status_message("Save failed.")
+
+
+func _on_pause_load_game() -> void:
+	if not SaveGame.has_save():
+		_pause_menu.set_status_message("No save file found.")
+		return
+
+	var main := get_tree().current_scene
+	if main == null or not main.has_method("load_saved_game"):
+		_pause_menu.set_status_message("Load failed.")
+		return
+
+	if main.load_saved_game():
+		_close_pause()
+		_pause_menu.set_status_message("Game loaded.")
+	else:
+		_pause_menu.set_status_message("Load failed.")
+
+
 func _update_interact_prompt() -> void:
 	var player: CharacterBody3D = GameState.player
-	if player == null:
+	if player == null or not is_instance_valid(player) or not player.is_inside_tree():
 		_interact_prompt.set_show_prompt(false)
 		return
 	var feet := Vector2(player.global_position.x, player.global_position.z)
@@ -114,6 +148,7 @@ func _try_begin_dialogue() -> void:
 
 
 func _begin_dialogue(npc: Node3D) -> void:
+	_set_player_camera_input(false)
 	var dialogue_id: int = npc.dialogue_id
 	if dialogue_id < 0 or DialogueData.line_count(dialogue_id) == 0:
 		return
@@ -160,3 +195,20 @@ func _end_dialogue() -> void:
 	GameState.dialogue_line = 0
 	_dialogue_box.hide_dialogue()
 	Events.dialogue_ended.emit()
+	_set_player_camera_input(true)
+
+
+func _set_player_camera_input(enabled: bool) -> void:
+	var player: CharacterBody3D = GameState.player
+	if player == null or not is_instance_valid(player):
+		return
+	if enabled:
+		if player.has_method("capture_camera_mouse"):
+			player.capture_camera_mouse()
+		if player.has_method("set_camera_input_enabled"):
+			player.set_camera_input_enabled(true)
+	else:
+		if player.has_method("release_camera_mouse"):
+			player.release_camera_mouse()
+		if player.has_method("set_camera_input_enabled"):
+			player.set_camera_input_enabled(false)

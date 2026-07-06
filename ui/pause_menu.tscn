@@ -29,10 +29,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -120.0
-offset_right = 180.0
-offset_bottom = 120.0
+offset_left = -220.0
+offset_top = -240.0
+offset_right = 220.0
+offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -45,7 +45,7 @@ theme_override_constants/margin_bottom = 20
 
 [node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 alignment = 1
 
 [node name="TitleLabel" type="Label" parent="Panel/Margin/VBox"]
@@ -54,14 +54,118 @@ theme_override_font_sizes/font_size = 32
 text = "Paused"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="Panel/Margin/VBox"]
-custom_minimum_size = Vector2(240, 44)
+[node name="StatusLabel" type="Label" parent="Panel/Margin/VBox"]
+visible = false
 layout_mode = 2
-focus_neighbor_bottom = NodePath("../QuitButton")
+theme_override_font_sizes/font_size = 16
+text = "Game saved."
+horizontal_alignment = 1
+
+[node name="MainPage" type="VBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Panel/Margin/VBox/MainPage"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+focus_neighbor_bottom = NodePath("../SettingsButton")
 text = "Resume"
 
-[node name="QuitButton" type="Button" parent="Panel/Margin/VBox"]
-custom_minimum_size = Vector2(240, 44)
+[node name="SettingsButton" type="Button" parent="Panel/Margin/VBox/MainPage"]
+custom_minimum_size = Vector2(280, 44)
 layout_mode = 2
 focus_neighbor_top = NodePath("../ResumeButton")
+focus_neighbor_bottom = NodePath("../SaveButton")
+text = "Settings"
+
+[node name="SaveButton" type="Button" parent="Panel/Margin/VBox/MainPage"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+focus_neighbor_top = NodePath("../SettingsButton")
+focus_neighbor_bottom = NodePath("../LoadButton")
+text = "Save Game"
+
+[node name="LoadButton" type="Button" parent="Panel/Margin/VBox/MainPage"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+focus_neighbor_top = NodePath("../SaveButton")
+focus_neighbor_bottom = NodePath("../QuitButton")
+text = "Load Game"
+
+[node name="QuitButton" type="Button" parent="Panel/Margin/VBox/MainPage"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+focus_neighbor_top = NodePath("../LoadButton")
 text = "Quit"
+
+[node name="SettingsPage" type="VBoxContainer" parent="Panel/Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SettingsScroll" type="ScrollContainer" parent="Panel/Margin/VBox/SettingsPage"]
+custom_minimum_size = Vector2(0, 260)
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SettingsVBox" type="VBoxContainer" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="ResolutionRow" type="VBoxContainer" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ResolutionLabel" type="Label" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/ResolutionRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Resolution"
+
+[node name="ResolutionOption" type="OptionButton" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/ResolutionRow"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+
+[node name="MinimapRow" type="VBoxContainer" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MinimapHeader" type="HBoxContainer" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/MinimapRow"]
+layout_mode = 2
+
+[node name="MinimapLabel" type="Label" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/MinimapRow/MinimapHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Minimap size"
+
+[node name="MinimapValue" type="Label" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/MinimapRow/MinimapHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "168 px"
+horizontal_alignment = 2
+
+[node name="MinimapSlider" type="HSlider" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox/MinimapRow"]
+custom_minimum_size = Vector2(280, 24)
+layout_mode = 2
+min_value = 120.0
+max_value = 280.0
+step = 8.0
+value = 168.0
+
+[node name="SettingsSaveButton" type="Button" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox"]
+custom_minimum_size = Vector2(280, 40)
+layout_mode = 2
+text = "Save Game"
+
+[node name="SettingsLoadButton" type="Button" parent="Panel/Margin/VBox/SettingsPage/SettingsScroll/SettingsVBox"]
+custom_minimum_size = Vector2(280, 40)
+layout_mode = 2
+text = "Load Game"
+
+[node name="SettingsBackButton" type="Button" parent="Panel/Margin/VBox/SettingsPage"]
+custom_minimum_size = Vector2(280, 44)
+layout_mode = 2
+text = "Back"

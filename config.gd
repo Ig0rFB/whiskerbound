@@ -2,21 +2,27 @@ extends Node
 ## Global tunables — see PROJECT.md §6.4 and §3.
 
 # Viewport
-const VIEWPORT_WIDTH := 1920
-const VIEWPORT_HEIGHT := 1080
+const VIEWPORT_WIDTH := 2560
+const VIEWPORT_HEIGHT := 1440
 const TARGET_FPS := 60
 
 # Camera — axis-aligned oblique (OOTS / Pokémon style), NOT 45° diamond isometric.
 # Yaw 0 = camera sits south (+Z), player walks north toward top of screen.
-# Yaw 45 = classic diagonal isometric (old look); avoid unless you want RTS-style rotation.
+# Zoom morphs pitch and look height: far = map view, near = third-person follow.
 const CAMERA_FOV := 38.0
+const CAMERA_FOV_NEAR := 42.0
 const CAMERA_YAW := 0.0
 const CAMERA_PITCH := -42.0
-const CAMERA_DISTANCE := 18.0
-const CAMERA_DISTANCE_MIN := 12.0
-const CAMERA_DISTANCE_MAX := 26.0
+const CAMERA_PITCH_FAR := -42.0
+const CAMERA_PITCH_NEAR := -15.0
+const CAMERA_DISTANCE := 10.0
+const CAMERA_DISTANCE_MIN := 3.0
+const CAMERA_DISTANCE_MAX := 10.0
 const CAMERA_ZOOM_STEP := 1.5
+const CAMERA_ZOOM_SPEED := 14.0
 const CAMERA_CHEST_HEIGHT := 0.9
+const CAMERA_CHEST_HEIGHT_FAR := 0.9
+const CAMERA_CHEST_HEIGHT_NEAR := 1.3
 const CAMERA_FOLLOW_SPEED := 8.0
 
 # Movement (M2+)
@@ -27,11 +33,24 @@ const INTERACT_RADIUS := 1.5
 const COLLISION_INSET := 0.1
 const PLAYER_RADIUS := 0.25
 const PLAYER_CAPSULE_HEIGHT := 0.7
+# Player model (assets/models/characters/player/Adventurer-man.glb)
+const PLAYER_MODEL_TARGET_HEIGHT := 0.8
+const PLAYER_MODEL_SORT_HEIGHT := 0.35
+const PLAYER_IDLE_ANIM := "CharacterArmature|Idle"
+const PLAYER_WALK_ANIM := "CharacterArmature|Walk"
+const PLAYER_WALK_ANIM_SPEED := 1.0
 const COMPANION_SPEED := 3.0
 const COMPANION_REPATH_INTERVAL := 0.5
 const COMPANION_STUCK_SECONDS := 2.0
 const COMPANION_PREDICT_SECONDS := 0.35
 const COMPANION_SLOT_LATERAL := 0.4
+# Companion cat model (assets/models/characters/companion/cat.glb)
+const COMPANION_MODEL_TARGET_HEIGHT := 0.4
+const COMPANION_MODEL_SORT_HEIGHT := 0.2
+const COMPANION_WALK_ANIM := "walk"
+const COMPANION_WALK_ANIM_SPEED := 1.0
+# Radians added to movement-facing yaw (Blender GLB bind pose faces -Z → use PI).
+const COMPANION_MODEL_YAW_OFFSET := PI
 
 # Placeholder colours (PROJECT.md §14)
 const COLOR_GROUND := Color("#7CB87C")
@@ -49,3 +68,5 @@ const MINIMAP_MARGIN := 16
 
 # Gamepad (PROJECT.md §11 — SN30 Pro / generic)
 const GAMEPAD_DEADZONE := 0.2
+# Star / capture on Switch Pro and 8BitDo Switch mode (SDL misc1).
+const GAMEPAD_STAR_BUTTON := JOY_BUTTON_MISC1

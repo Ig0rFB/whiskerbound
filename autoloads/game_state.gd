@@ -12,6 +12,7 @@ enum GameMode {
 var mode: GameMode = GameMode.GAMEPLAY
 var current_area_id: String = ""
 var player: CharacterBody3D = null
+var camera_rig: Node3D = null
 var collision_grid: CollisionGrid = null
 var pathfinder: AStarGrid2D = null
 var companion: Node3D = null
@@ -24,3 +25,17 @@ var dialogue_npc: Node3D = null
 var dialogue_id: int = -1
 var dialogue_line: int = 0
 var quest_flags: Dictionary = {}
+
+
+func clear_world_refs() -> void:
+	player = null
+	camera_rig = null
+	collision_grid = null
+	pathfinder = null
+	companion = null
+	companions.clear()
+	npcs.clear()
+	dialogue_npc = null
+	dialogue_id = -1
+	dialogue_line = 0
+	mode = GameMode.GAMEPLAY
