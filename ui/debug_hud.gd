@@ -45,7 +45,6 @@ func _draw_left_panel() -> void:
 	_append_line(lines, font_sizes, _mode_line(), FONT_MAIN)
 	_append_line(lines, font_sizes, "Companions: %d" % GameState.companions.size(), FONT_MAIN)
 	_append_line(lines, font_sizes, "Colliders: %s" % _on_off(GameState.show_collision_debug), FONT_MAIN)
-	_append_line(lines, font_sizes, "Path: %s" % _on_off(GameState.show_debug_hud), FONT_MAIN)
 
 	_append_line(lines, font_sizes, "— Player —", FONT_SECTION)
 	for line in _player_debug_lines():
@@ -68,12 +67,9 @@ func _draw_right_panel() -> void:
 		return
 
 	var feet := Vector2(player.global_position.x, player.global_position.z)
-	var tile_x := int(floorf(feet.x))
-	var tile_z := int(floorf(feet.y))
 	var lines: PackedStringArray = [
 		"Pos (%.2f, %.2f)" % [feet.x, feet.y],
 		"Height: %.2f" % player.global_position.y,
-		"Tile [%d, %d]" % [tile_x, tile_z],
 		"Walk: %s" % _walk_label(feet, grid),
 	]
 	lines.append_array(_camera_debug_lines())
@@ -105,35 +101,14 @@ func _player_debug_lines() -> PackedStringArray:
 		"State: %s" % player.state_machine.curr_state_name,
 		"Speed: %.2f" % player.velocity.length(),
 		"On floor: %s" % str(player.is_on_floor()),
-		"Air jumps: %d" % player.nb_jumps_in_air_allowed,
-		"Jump buffer: %s" % _jump_buffer_line(player),
-		"Coyote time: %s" % _coyote_time_line(player),
 		"Interact: %s" % _interact_target_line(),
-		"Ray hit: %s" % _interaction_ray_hit_line(),
-		"Ray collider: %s" % _interaction_ray_collider_line(),
-		"Ray layer: %s" % _interaction_ray_layer_line(),
 	]
 
 	if "cam_holder" in player and player.cam_holder != null:
 		var cam = player.cam_holder
 		lines.append("Cam mode: %s" % ("aim" if cam.cam_aimed else "default"))
-		if "follow_cam_pos_when_aimed" in player:
-			var orient := "cam follower" if (cam.cam_aimed and player.follow_cam_pos_when_aimed) else "independent"
-			lines.append("Model facing: %s" % orient)
 
 	return lines
-
-
-func _jump_buffer_line(player: CharacterBody3D) -> String:
-	if "jump_buff_on" in player:
-		return "on" if player.jump_buff_on else "off"
-	return "—"
-
-
-func _coyote_time_line(player: CharacterBody3D) -> String:
-	if "coyote_jump_cooldown" in player:
-		return "%.2f" % player.coyote_jump_cooldown
-	return "—"
 
 
 func _interact_target_line() -> String:
@@ -155,52 +130,10 @@ func _get_interaction_ray() -> RayCast3D:
 	return player.get_node_or_null("%InteractionRaycast") as RayCast3D
 
 
-func _interaction_ray_hit_line() -> String:
-	var ray := _get_interaction_ray()
-	if ray == null:
-		return "RAY MISSING"
-	ray.force_raycast_update()
-	return "yes" if ray.is_colliding() else "no"
-
-
-func _interaction_ray_collider_line() -> String:
-	var ray := _get_interaction_ray()
-	if ray == null or not ray.is_colliding():
-		return "—"
-	var collider: Object = ray.get_collider()
-	if collider is Node:
-		return (collider as Node).name
-	return "—"
-
-
-func _interaction_ray_layer_line() -> String:
-	var ray := _get_interaction_ray()
-	if ray == null or not ray.is_colliding():
-		return "—"
-	var collider: Object = ray.get_collider()
-	if collider is CollisionObject3D:
-		return str((collider as CollisionObject3D).collision_layer)
-	return "—"
-
-
 func _shortcut_lines() -> PackedStringArray:
 	return PackedStringArray([
-		"WASD / stick — move",
-		"Shift / Y — run",
-		"Space / A — jump",
-		"Mouse / R-stick — look",
-		"Wheel / V — zoom in",
-		"Wheel / B — zoom out",
-		"L2 / R2 — zoom out / in",
-		"RMB / R-shoulder — aim cam",
-		"G — swap aim shoulder",
-		"T — toggle cam collision",
-		"Ctrl / L3 — free mouse",
-		"E / A — talk / advance",
-		"H — debug HUD",
-		"M — minimap",
-		"Esc / Start — pause",
-		"R — restart  C — +cat  L — reload",
+		"H HUD  ·  M map  ·  Esc pause",
+		"C +cat  ·  R restart  ·  L reload",
 	])
 
 
