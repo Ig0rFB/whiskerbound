@@ -182,7 +182,14 @@ When adding geometry or actors to **playground**, use the playground column. Whe
 
 - `CharacterBody3D`, capsule, `apply_gravity()`, `move_and_slide()`, `snap_to_floor()`
 - Playground scene: layer **2**, mask **3** (world + characters on reference bits)
-- Horizontal velocity from A* follow; Y from physics
+- Locomotion: **`NavigationAgent3D`** pathing on a baked `NavigationRegion3D` (see below); horizontal velocity steers toward the agent's next path point, Y from physics
+- Follow goal is a point **behind the player** (fanned per companion); grid A* is a fallback where no navmesh exists
+
+**Navigation (companion pathing) — baked navmesh:**
+
+- Playground attaches a `NavigationRegion3D` (built in code in `playground.gd`, under `WorldOffset`) carrying a **pre-baked** `NavigationMesh` (`scenes/areas/playground_navmesh.tres`, from the CSG geometry) so cats path over the real platforms, not the coarse grid
+- Regenerate the resource with `scenes/tools/bake_playground_navmesh.gd` when walkable geometry changes; a runtime bake is the fallback if the resource is missing
+- Nav tunables (cell/agent dims, follow feel) live in `config.gd` (`NAV_*`, `COMPANION_NAV_*`, `COMPANION_STOP_DISTANCE`, `COMPANION_FOLLOW_SPEED`/`_CATCHUP_*`, `COMPANION_FORMATION_*`)
 
 **Playground NPCs — reference `NPCBody`:**
 
@@ -194,7 +201,7 @@ When adding geometry or actors to **playground**, use the playground column. Whe
 
 ### Layer 2 — Logic grid (companion AI & overlays)
 
-**Who uses it:** companion pathfinding, minimap walkability tint, collision debug overlay, smoke tests. **Not** the player's primary collision in the playground.
+**Who uses it:** minimap walkability tint, collision debug overlay, smoke tests, and companion pathfinding **only as the navmesh fallback** (e.g. `village_green`). **Not** the player's collision, and **not** the companion's primary pathing in the playground (that is the baked navmesh above).
 
 **Implementation:** `core/world/collision_grid.gd` — 2D `width × height` solid/walkable flags on the XZ plane (`GRID_CELL := 1.0`).
 
@@ -205,7 +212,7 @@ When adding geometry or actors to **playground**, use the playground column. Whe
 
 **Feet sampling** (`core/movement/movement.gd`, `player_collider.gd`, `COLLISION_INSET`): still used for grid-based logic and the legacy village area. Rect footprint at foot height, inset 0.1 units to reduce edge snagging.
 
-**Future (post-M5):** bake or paint the logic grid from 3D geometry (navmesh slice, CSG export, or designer-painted overlay) so companion paths respect the same obstacles the player hits. Until then, accept that A* is approximate in the playground.
+**Done (playground):** companion locomotion now runs on a baked `NavigationRegion3D` from the real geometry (Layer 1 above), so cats respect the same obstacles the player hits. The coarse logic grid is kept only for minimap/debug/tests and as the pathing fallback in areas without a navmesh. **Future:** bake navmeshes for the other areas so the grid fallback can be retired.
 
 ### Grid & coordinates
 
@@ -512,10 +519,10 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 ### 9.2 Cat companion (Lumi)
 
 - Extends **GroundedCharacter** (§9.0) — `CharacterBody3D` + capsule, gravity, floor snap
-- Follows player via **A* on collision grid** (Godot `AStarGrid2D` on XZ)
-- Stops within `COMPANION_FOLLOW_DISTANCE`
-- Repath every `COMPANION_REPATH_INTERVAL` s; stuck teleport fallback after `COMPANION_STUCK_SECONDS`
-- Horizontal motion from `CompanionLogic`; vertical motion from physics (not manual Y raycasts)
+- Follows player via **`NavigationAgent3D`** on the baked `NavigationRegion3D` (§4); grid A* (`CompanionLogic`) is the fallback where no navmesh exists (`village_green`)
+- Aims for a point **behind the player** at `COMPANION_STOP_DISTANCE`, fanned per companion (`COMPANION_FORMATION_*`) so multiple cats spread rather than stack
+- Speed ramps with distance to the player (`COMPANION_FOLLOW_SPEED` near → `COMPANION_CATCHUP_SPEED` far over `COMPANION_CATCHUP_RANGE`)
+- Horizontal motion from the nav motor in `companion.gd`; vertical motion from physics (not manual Y raycasts)
 - `cat.glb` mesh under `Visual/Model`; editor floor snap via raycast (place X/Z only in area scenes)
 
 **Follow vs autonomous (M3 extension — see `companion logic.md`)**
@@ -524,7 +531,7 @@ Shipping behaviour is **follow-only** via `CompanionLogic`. Autonomous roam/sit/
 
 | Mode | Status | Logic |
 |---|---|---|
-| **Follow** | Shipped | `CompanionLogic` — A* toward predicted player feet |
+| **Follow** | Shipped | `NavigationAgent3D` motor in `companion.gd` — path to a fanned point behind the player (grid `CompanionLogic` fallback) |
 | **Roam / activities / meow** | Planned (Phase 1+) | `CompanionBrain` — blend follow with companion-owned urges |
 
 Autonomous activities (planned — timer/urge state machine in `core/companion/`):
