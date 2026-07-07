@@ -14,6 +14,11 @@ var _last_feet: Vector2 = Vector2.ZERO
 var _model_fitted := false
 var _editor_snapping := false
 var _nav_goal_timer: float = 0.0
+## Unit "behind the player" direction, refreshed while the player moves; held while idle.
+var _back_dir: Vector2 = Vector2.ZERO
+## Per-companion formation, set once at spawn: fanned slot angle plus random jitter so cats spread.
+var _formation_angle: float = 0.0
+var _formation_distance_jitter: float = 0.0
 
 
 func _ready() -> void:
@@ -97,6 +102,7 @@ func setup(slot: int, spawn_feet: Vector2, spawn_height: float = 0.0) -> void:
 	_data = CompanionData.new()
 	_data.configure_slot(slot)
 	_data.last_progress_pos = spawn_feet
+	_init_formation()
 	_model_fitted = false
 	_fit_model_to_feet()
 	_align_visual_to_feet()
@@ -111,10 +117,24 @@ func activate(slot: int) -> void:
 	_data = CompanionData.new()
 	_data.configure_slot(slot)
 	_data.last_progress_pos = _last_feet
+	_init_formation()
 	_model_fitted = false
 	_fit_model_to_feet()
 	_align_visual_to_feet()
 	call_deferred("snap_to_floor")
+
+
+## Fan companions out behind the player: a deterministic per-slot angle (0, +A, -A, +2A, ...)
+## plus a small random jitter so multiple cats never target the exact same point.
+func _init_formation() -> void:
+	var pair := int((_slot + 1) / 2)
+	var side := 1.0 if _slot % 2 == 1 else -1.0
+	var base_angle := float(pair) * Config.COMPANION_FORMATION_ANGLE * side
+	_formation_angle = base_angle + randf_range(
+		-Config.COMPANION_FORMATION_JITTER_ANGLE, Config.COMPANION_FORMATION_JITTER_ANGLE)
+	_formation_distance_jitter = randf_range(
+		-Config.COMPANION_FORMATION_JITTER_DISTANCE, Config.COMPANION_FORMATION_JITTER_DISTANCE)
+	_back_dir = Vector2.ZERO
 
 
 func _physics_process(delta: float) -> void:
@@ -151,21 +171,29 @@ func _navigation_active() -> bool:
 	return NavigationServer3D.map_get_regions(map).size() > 0
 
 
-## NavigationAgent3D follow: steer toward the next path point, arrive and stop near the player.
+## NavigationAgent3D follow: aim for this companion's formation point behind the player, steer along
+## the path with speed that ramps up with distance, and stop once the spot is reached.
 func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
-	var player_velocity := _read_player_velocity(player)
 	var comp_feet := Vector2(global_position.x, global_position.z)
-	var follow_dist := CompanionLogic.follow_distance(_slot)
+	_update_back_dir(player, comp_feet, player_feet)
+
+	var target_feet := player_feet + _back_dir.rotated(_formation_angle) * (
+		Config.COMPANION_STOP_DISTANCE + _formation_distance_jitter)
+	var dist_to_player := comp_feet.distance_to(player_feet)
+	var dist_to_target := comp_feet.distance_to(target_feet)
 
 	_nav_goal_timer -= delta
-	if comp_feet.distance_to(player_feet) <= follow_dist:
+	var arrived := (
+		dist_to_target <= Config.COMPANION_NAV_TARGET_DESIRED_DISTANCE
+		or dist_to_player <= Config.COMPANION_MIN_PLAYER_GAP
+	)
+	if arrived:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	else:
 		if _nav_goal_timer <= 0.0:
-			var goal := _follow_goal(player_feet, player_velocity)
-			var raw_goal := Vector3(goal.x, player.global_position.y, goal.y)
+			var raw_goal := Vector3(target_feet.x, player.global_position.y, target_feet.y)
 			# Snap the goal onto the navmesh so the companion never chases a point off an edge.
 			var map: RID = _nav_agent.get_navigation_map()
 			_nav_agent.target_position = NavigationServer3D.map_get_closest_point(map, raw_goal)
@@ -177,10 +205,7 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 			var to_next := _nav_agent.get_next_path_position() - global_position
 			to_next.y = 0.0
 			var direction := to_next.normalized() if to_next.length() > 0.001 else Vector3.ZERO
-			var speed := Config.COMPANION_SPEED
-			var remaining := _nav_agent.distance_to_target()
-			if remaining < Config.COMPANION_NAV_ARRIVE_SLOWDOWN:
-				speed *= clampf(remaining / Config.COMPANION_NAV_ARRIVE_SLOWDOWN, 0.2, 1.0)
+			var speed := _follow_speed(dist_to_player)
 			velocity.x = direction.x * speed
 			velocity.z = direction.z * speed
 
@@ -192,6 +217,24 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	_update_facing(move_delta)
 	_update_walk_anim(move_speed > 0.05, move_speed)
 	_last_feet = Vector2(global_position.x, global_position.z)
+
+
+## Speed ramps from a gentle pace near the player up to catch-up speed far away.
+func _follow_speed(dist_to_player: float) -> float:
+	var t := clampf(
+		(dist_to_player - Config.COMPANION_STOP_DISTANCE) / Config.COMPANION_CATCHUP_RANGE, 0.0, 1.0)
+	return lerpf(Config.COMPANION_FOLLOW_SPEED, Config.COMPANION_CATCHUP_SPEED, t)
+
+
+## "Behind the player" tracks the player's movement while walking; holds its last value while idle.
+func _update_back_dir(player: CharacterBody3D, comp_feet: Vector2, player_feet: Vector2) -> void:
+	var player_velocity := _read_player_velocity(player)
+	if player_velocity.length_squared() > 0.09:
+		_back_dir = -player_velocity.normalized()
+	elif _back_dir == Vector2.ZERO:
+		# First idle frame: settle on the side the companion is already on (fallback: south).
+		var away := comp_feet - player_feet
+		_back_dir = away.normalized() if away.length_squared() > 0.0001 else Vector2(0.0, 1.0)
 
 
 ## Legacy grid A* follow — retained for areas without a navmesh (PROJECT.md §4 fallback).
@@ -237,19 +280,6 @@ func _read_player_velocity(player: CharacterBody3D) -> Vector2:
 	if player_velocity.length_squared() < 0.01:
 		player_velocity = InputActions.move_vector * Config.PLAYER_SPEED
 	return player_velocity
-
-
-## Follow goal in feet space: player position with velocity lead and per-slot lateral spread.
-func _follow_goal(player_feet: Vector2, player_velocity: Vector2) -> Vector2:
-	var goal := player_feet
-	if player_velocity.length_squared() > 0.01:
-		goal += player_velocity * Config.COMPANION_PREDICT_SECONDS
-		var vel_dir := player_velocity.normalized()
-		var perp := Vector2(-vel_dir.y, vel_dir.x)
-		goal += perp * _data.slot_lateral_offset
-	else:
-		goal += _data.idle_ring_offset
-	return goal
 
 
 func _apply_horizontal_velocity(target_feet: Vector2, delta: float) -> void:
