@@ -1,14 +1,11 @@
 extends Node
 ## Entry point — boots UI and delegates area loading to AreaManager.
 
-const TpcInputSetupScript := preload("res://scenes/tools/tpc_input_setup.gd")
-
 @onready var _area_manager: AreaManager = $AreaManager
 
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	TpcInputSetupScript.ensure_actions_registered()
 
 	Events.collision_debug_toggled.connect(_on_collision_debug_toggled)
 	Events.debug_restart_requested.connect(_on_debug_restart)

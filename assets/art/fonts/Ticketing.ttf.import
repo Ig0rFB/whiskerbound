@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://dewgtcm8moxxi"
-path="res://.godot/imported/Ticketing.ttf-5b77f8dd21f1507d68481d7241814aa5.fontdata"
+uid="uid://dkffufs65y8px"
+path="res://.godot/imported/Ticketing.ttf-a5870008de38cc4ae1400ef37327c4bc.fontdata"
 
 [deps]
 
-source_file="res://addons/JehenoThirdPersonController/Arts/Fonts/Ticketing.ttf"
-dest_files=["res://.godot/imported/Ticketing.ttf-5b77f8dd21f1507d68481d7241814aa5.fontdata"]
+source_file="res://assets/art/fonts/Ticketing.ttf"
+dest_files=["res://.godot/imported/Ticketing.ttf-a5870008de38cc4ae1400ef37327c4bc.fontdata"]
 
 [params]
 
@@ -22,7 +22,7 @@ msdf_size=48
 allow_system_fallback=true
 force_autohinter=false
 modulate_color_glyphs=false
-hinting=1
+hinting=3
 subpixel_positioning=4
 keep_rounding_remainders=true
 oversampling=0.0
@@ -30,12 +30,7 @@ Fallbacks=null
 fallbacks=[]
 Compress=null
 compress=true
-preload=[{
-"chars": [],
-"glyphs": [],
-"name": "New Configuration",
-"size": Vector2i(16, 0)
-}]
+preload=[]
 language_support={}
 script_support={}
 opentype_features={}

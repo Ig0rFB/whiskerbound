@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dg1ewj06f2hsf"]
 
 [ext_resource type="Script" uid="uid://d2y1ditd1uxe4" path="res://scenes/areas/playground.gd" id="1_area"]
-[ext_resource type="Texture2D" uid="uid://nu6btp05qtin" path="res://addons/JehenoThirdPersonController/Arts/godot-prototype-texture/PNG/grid_1024x1024/grid_black_1024x1024.png" id="2_tex"]
+[ext_resource type="Texture2D" uid="uid://nu6btp05qtin" path="res://assets/art/textures/grid_black_1024x1024.png" id="2_tex"]
 [ext_resource type="PackedScene" uid="uid://0nhxf5qfk441" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" uid="uid://c3companion01" path="res://scenes/companion/companion.tscn" id="4_companion"]
 [ext_resource type="PackedScene" uid="uid://b4npc0000001" path="res://scenes/npc/npc.tscn" id="5_npc"]
@@ -78,6 +78,14 @@ size = Vector3(8, 2, 10)
 
 [node name="CSGBox3D11" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1504415029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3, 23.5)
+size = Vector3(4, 6, 1)
+
+[node name="CSGBox3D13" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1600833206]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 3, 23.5)
+size = Vector3(4, 6, 1)
+
+[node name="CSGBox3D12" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=1740390996]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 3, 20)
 size = Vector3(4, 6, 1)
 
 [node name="CSGBox3D2" type="CSGBox3D" parent="WorldOffset/Structures/CSGCombiner3D" unique_id=774363641]

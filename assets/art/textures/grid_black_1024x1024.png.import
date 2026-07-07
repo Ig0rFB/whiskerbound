@@ -2,20 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ck8ahgtjkc304"
-path="res://.godot/imported/grid_white_1024x1024.png-da08281548a6838ddf173d79501fc2cd.ctex"
+uid="uid://nu6btp05qtin"
+path.s3tc="res://.godot/imported/grid_black_1024x1024.png-f14a8d8bb633414bc78eefff8ac3ade1.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
-source_file="res://addons/JehenoThirdPersonController/Arts/godot-prototype-texture/PNG/grid_1024x1024/grid_white_1024x1024.png"
-dest_files=["res://.godot/imported/grid_white_1024x1024.png-da08281548a6838ddf173d79501fc2cd.ctex"]
+source_file="res://assets/art/textures/grid_black_1024x1024.png"
+dest_files=["res://.godot/imported/grid_black_1024x1024.png-f14a8d8bb633414bc78eefff8ac3ade1.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -23,7 +24,7 @@ compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
 compress/normal_map=0
 compress/channel_pack=0
-mipmaps/generate=false
+mipmaps/generate=true
 mipmaps/limit=-1
 roughness/mode=0
 roughness/src_normal=""
@@ -37,4 +38,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
