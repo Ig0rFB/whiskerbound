@@ -15,6 +15,7 @@ static func evaluate(
 	player_feet: Vector2,
 	player_moving: bool,
 	formation_target: Vector2,
+	home_dir: Vector2,
 	data: CompanionData,
 	delta: float,
 ) -> CompanionBrainStep:
@@ -34,7 +35,7 @@ static func evaluate(
 
 	# Tier 2 — settled near an idle player: run the roam / idle state machine.
 	step.following = false
-	_tick_activity(data, delta, feet, player_feet)
+	_tick_activity(data, delta, player_feet, home_dir)
 
 	match data.activity:
 		CompanionActivity.Type.WANDER:
@@ -46,9 +47,10 @@ static func evaluate(
 				cos(data.orbit_angle), sin(data.orbit_angle)) * Config.COMPANION_CIRCLE_RADIUS
 			step.hold = false
 		_:
-			# SIT / PLAY / GROOM — hold position (no animation yet; stillness reads as resting).
-			step.target_feet = feet
-			step.hold = true
+			# SIT / PLAY / GROOM — settle at the formation slot behind the player and rest there,
+			# so multiple idle cats fan out instead of clustering where they happened to stop.
+			step.target_feet = formation_target
+			step.hold = feet.distance_squared_to(formation_target) <= REACH_DIST_SQ
 
 	step.activity = data.activity
 	return step
@@ -64,28 +66,30 @@ static func _tick_meow(data: CompanionData, delta: float, step: CompanionBrainSt
 
 
 static func _tick_activity(
-	data: CompanionData, delta: float, feet: Vector2, player_feet: Vector2) -> void:
+	data: CompanionData, delta: float, player_feet: Vector2, home_dir: Vector2) -> void:
 	data.activity_timer -= delta
 	if data.activity != CompanionActivity.Type.NONE and data.activity_timer > 0.0:
 		return
-	_pick_activity(data, feet, player_feet)
+	_pick_activity(data, player_feet, home_dir)
 	data.activity_timer = randf_range(
 		Config.COMPANION_ACTIVITY_MIN_SECONDS, Config.COMPANION_ACTIVITY_MAX_SECONDS)
 
 
 ## Weighted random next activity — wander is most common, then circle, then rest in place.
-static func _pick_activity(data: CompanionData, feet: Vector2, player_feet: Vector2) -> void:
+## Wander targets stay within the cat's home sector so multiple cats roam in different directions.
+static func _pick_activity(data: CompanionData, player_feet: Vector2, home_dir: Vector2) -> void:
+	var base_angle := home_dir.angle() if home_dir.length_squared() > 0.0001 else randf() * TAU
 	var roll := randi() % 6
 	match roll:
 		0, 1, 2:
 			data.activity = CompanionActivity.Type.WANDER
-			var angle := randf() * TAU
+			var angle := base_angle + randf_range(
+				-Config.COMPANION_WANDER_SECTOR, Config.COMPANION_WANDER_SECTOR)
 			var dist := randf_range(0.8, Config.COMPANION_WANDER_RADIUS)
 			data.wander_target = player_feet + Vector2(cos(angle), sin(angle)) * dist
 		3:
 			data.activity = CompanionActivity.Type.CIRCLE
-			var away := feet - player_feet
-			data.orbit_angle = away.angle() if away.length_squared() > 0.0001 else randf() * TAU
+			data.orbit_angle = base_angle
 		4:
 			data.activity = CompanionActivity.Type.SIT
 		_:

@@ -108,6 +108,9 @@ const COMPANION_LEASH_SOFT := 3.5
 ## Orbit radius/angular speed when the cat circles the player.
 const COMPANION_CIRCLE_RADIUS := 1.6
 const COMPANION_CIRCLE_SPEED := 0.8
+## Half-angle (radians) of the sector each cat wanders within, centred on its formation slot,
+## so multiple cats roam and rest in different directions instead of clustering.
+const COMPANION_WANDER_SECTOR := 0.9
 
 # Editor floor snap for scene-placed companions (raycast above/below current XZ)
 const EDITOR_FLOOR_SNAP_RAY_ABOVE := 20.0

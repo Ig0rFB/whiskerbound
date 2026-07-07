@@ -175,7 +175,8 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	var player_velocity := _read_player_velocity(player)
 	_update_back_dir(player_velocity, comp_feet, player_feet)
 
-	var formation_target := player_feet + _back_dir.rotated(_formation_angle) * (
+	var home_dir := _back_dir.rotated(_formation_angle)
+	var formation_target := player_feet + home_dir * (
 		Config.COMPANION_STOP_DISTANCE + _formation_distance_jitter)
 
 	# Default motor goal is the follow formation point; the brain may override it with an autonomy goal.
@@ -185,7 +186,7 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	if Config.COMPANION_BRAIN_ENABLED:
 		var player_moving := player_velocity.length_squared() > 0.09
 		var step := CompanionBrain.evaluate(
-			comp_feet, player_feet, player_moving, formation_target, _data, delta)
+			comp_feet, player_feet, player_moving, formation_target, home_dir, _data, delta)
 		if not step.bark_text.is_empty():
 			Events.companion_barked.emit(self, step.bark_text)
 		goal_feet = step.target_feet
