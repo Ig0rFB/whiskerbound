@@ -66,6 +66,18 @@ boring native Godot).
   nudge only where the grid path runs. Enable `NavigationAgent3D` avoidance if multiple companions
   become a real scenario.
 
+### Code-review findings (open)
+
+- **No stuck recovery on the nav path.** The grid follow teleports beside the player after
+  `COMPANION_STUCK_SECONDS`; the nav motor has no equivalent, so a cat stranded on a disconnected
+  navmesh island (or wedged) never rejoins. Add a stuck timer + snap-to-player fallback to `_nav_follow`.
+- **Per-frame allocations in `_physics_process`** (against AGENTS.md): `CompanionBrain.evaluate`
+  returns a fresh `CompanionBrainStep` each frame, and `_navigation_active()` calls
+  `NavigationServer3D.map_get_regions()` (allocates an Array) each frame. Reuse a preallocated step,
+  and cache nav-availability per area load.
+- **Duplicated post-move tail** in `_nav_follow` / `_grid_follow` (gravity, move_and_slide, facing,
+  walk anim) — extract a shared helper.
+
 ## Deferred (next phase, after Igor tests)
 
 - [x] Update `PROJECT.md` section 4 / section 9.2, `README.md`, `companion logic.md`, `AGENTS.md`

@@ -372,7 +372,7 @@ whiskerbound/
 │   ├── dialogue_box.gd/.tscn
 │   ├── interact_prompt.gd/.tscn
 │   └── companion_bark.gd/.tscn  # meow speech bubble
-├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh
+├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh, run_companion_behaviour_test.sh
 ├── assets/                      # audio, fonts, materials, models (see assets/ASSETS.md)
 ├── addons/                      # GDQuest character packs, anthonyec.camera_preview; Jeheno (legacy, unused at runtime)
 └── reference/                   # whiskerbound-2d-prototype, untitled-game (player/NPC interaction source)
@@ -650,7 +650,7 @@ Canonical mapping lives in `input/input_actions.gd` and Project → Input Map; t
 - **HUD**: interact prompt when raycast targets an NPC (`ui/interact_prompt.tscn` via `Events.interact_target_changed`)
 - **Minimap**: top-right, 2D overhead of area collision grid + player dot (toggle M)
 - **Pause menu**: resume, quit
-- **Debug HUD** (M6): FPS, collision overlay toggle (H), entity picker (stretch)
+- **Debug HUD** (M6, `ui/debug_hud.gd`, toggle H): live state only — FPS, area, mode, companions, collider-overlay flag; player state / speed / on-floor / interact target / cam mode; position / height / walk; camera dist / pitch. Keep it lean (live debug values, not a control reference)
 
 All UI in `CanvasLayer`. UI logic scripts must not manipulate 3D scene directly.
 
@@ -765,14 +765,15 @@ Interactive: open project in Godot 4.7 and press **F5**. WASD to move; **H** tog
 
 ### Verification (M3)
 
-Smoke test verifies A* pathfinding, companion follow simulation, and spawn beside player:
+Headless tests cover the pure follow logic, the mesh fit, and the live navmesh follow + brain:
 
 ```bash
-bash scripts/run_smoke_test.sh
-# Expected: SMOKE_OK with player and companion positions
+bash scripts/run_smoke_test.sh                 # A* logic + spawn-beside → SMOKE_OK
+bash scripts/run_companion_visual_test.sh      # cat.glb mesh fit + material → COMPANION_VISUAL_OK
+bash scripts/run_companion_behaviour_test.sh   # navmesh follow closes distance; brain roams + meows → COMPANION_BEHAVIOUR_OK
 ```
 
-Walk away from Lumi in-game — she follows and stops ~1.25 units away. Stand still ~2 s — she wanders, sits, or grooms nearby; occasional meow bubble appears above her head.
+Walk away from Lumi in-game — she follows and stops ~1.7 units behind you (`COMPANION_STOP_DISTANCE`). Stand still — she wanders, circles, sits, or grooms nearby; a meow bubble appears above her head.
 
 ### Verification (M4)
 
