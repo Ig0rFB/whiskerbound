@@ -314,10 +314,6 @@ func get_debug_path() -> PackedVector2Array:
 	return _data.path
 
 
-func get_debug_path_index() -> int:
-	return _data.path_index
-
-
 func get_debug_slot() -> int:
 	return _slot
 
