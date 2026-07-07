@@ -36,6 +36,7 @@ func _initialize() -> void:
 	_check_navmesh()
 	await _check_follow(player, companion)
 	await _check_roam(player, companion)
+	await _check_fall_recovery(player, companion)
 	_finish()
 
 
@@ -96,6 +97,23 @@ func _check_roam(player: CharacterBody3D, companion: CharacterBody3D) -> void:
 		_fail("companion wandered too far from the player (%.2f)" % max_dist)
 	if min_y < PLATFORM_MIN_Y:
 		_fail("companion fell off the platform while roaming (min_y %.2f)" % min_y)
+
+
+## A companion dropped onto the lower (disconnected) level should snap back beside the player.
+func _check_fall_recovery(player: CharacterBody3D, companion: CharacterBody3D) -> void:
+	player.global_position = Vector3(54.0, player.global_position.y, 41.5)
+	companion.global_position = Vector3(54.0, 0.5, 60.0)
+	var recovered := false
+	for i in FOLLOW_FRAMES:
+		player.velocity = Vector3.ZERO
+		await physics_frame
+		if companion.global_position.y > PLATFORM_MIN_Y:
+			recovered = true
+			break
+
+	print("BEHAVIOUR: fall_recovery recovered=%s end_y=%.2f" % [recovered, companion.global_position.y])
+	if not recovered:
+		_fail("companion did not recover after falling to a lower level")
 
 
 func _feet(node: Node3D) -> Vector2:

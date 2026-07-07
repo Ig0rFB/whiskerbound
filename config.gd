@@ -39,6 +39,10 @@ const INTERACTION_FOCUS_COLOUR := Color(1.0, 0.92, 0.35, 0.85)
 const INTERACTION_FOCUS_ENERGY := 1.4
 const COLLISION_INSET := 0.1
 const COMPANION_SPEED := 3.0
+## Fall recovery: if a companion drops this far below the player (fell off a ledge onto a lower
+## level) and stays there this long, it snaps back onto the navmesh beside the player.
+const COMPANION_FALL_RECOVER_HEIGHT := 3.0
+const COMPANION_STUCK_SECONDS := 2.0
 const COMPANION_PREDICT_SECONDS := 0.35
 const COMPANION_SLOT_LATERAL := 0.4
 const COMPANION_MODEL_TARGET_HEIGHT := 0.4

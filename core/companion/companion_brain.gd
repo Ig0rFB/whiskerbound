@@ -10,6 +10,7 @@ class_name CompanionBrain
 const REACH_DIST_SQ := 0.16
 
 
+## Fills and returns [param step] (reused across frames to avoid per-frame allocation — AGENTS.md).
 static func evaluate(
 	feet: Vector2,
 	player_feet: Vector2,
@@ -18,8 +19,13 @@ static func evaluate(
 	home_dir: Vector2,
 	data: CompanionData,
 	delta: float,
+	step: CompanionBrainStep,
 ) -> CompanionBrainStep:
-	var step := CompanionBrainStep.new()
+	step.bark_text = ""
+	step.hold = false
+	step.following = true
+	step.activity = CompanionActivity.Type.NONE
+	step.target_feet = feet
 	_tick_meow(data, delta, step)
 
 	# Tier 1 — follow / catch-up wins whenever the player moves or the cat has strayed too far.

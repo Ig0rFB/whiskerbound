@@ -16,6 +16,13 @@ var _back_dir: Vector2 = Vector2.ZERO
 ## Per-companion formation, set once at spawn: fanned slot angle plus random jitter so cats spread.
 var _formation_angle: float = 0.0
 var _formation_distance_jitter: float = 0.0
+## Reused across frames so the brain does not allocate a step every physics frame (AGENTS.md).
+var _brain_step := CompanionBrainStep.new()
+## Cached once the navigation map has synced: does this area have a baked navmesh?
+var _nav_checked := false
+var _nav_available := false
+## Fall-recovery timer: snap beside the player if the companion stays fallen below them too long.
+var _fall_recover_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -130,6 +137,10 @@ func _init_formation() -> void:
 	_formation_distance_jitter = randf_range(
 		-Config.COMPANION_FORMATION_JITTER_DISTANCE, Config.COMPANION_FORMATION_JITTER_DISTANCE)
 	_back_dir = Vector2.ZERO
+	# Re-evaluate navmesh availability for the (possibly new) area, and reset stuck tracking.
+	_nav_checked = false
+	_nav_available = false
+	_fall_recover_timer = 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -153,17 +164,22 @@ func _physics_process(delta: float) -> void:
 		_grid_follow(delta, player)
 
 
-## True when the agent's navigation map has synchronised and holds at least one baked region.
+## True when the agent's navigation map holds a baked region. Resolved once per area (reset in
+## _init_formation) so the per-frame path avoids the map_get_regions() allocation (AGENTS.md).
 func _navigation_active() -> bool:
+	if _nav_checked:
+		return _nav_available
 	if _nav_agent == null:
 		return false
 	var map: RID = _nav_agent.get_navigation_map()
 	if not map.is_valid():
 		return false
-	# iteration_id is 0 until the map's first synchronisation; querying before then errors.
+	# iteration_id is 0 until the map's first synchronisation; querying regions before then errors.
 	if NavigationServer3D.map_get_iteration_id(map) == 0:
 		return false
-	return NavigationServer3D.map_get_regions(map).size() > 0
+	_nav_available = NavigationServer3D.map_get_regions(map).size() > 0
+	_nav_checked = true
+	return _nav_available
 
 
 ## NavigationAgent3D follow: aim for this companion's formation point behind the player, steer along
@@ -186,7 +202,7 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	if Config.COMPANION_BRAIN_ENABLED:
 		var player_moving := player_velocity.length_squared() > 0.09
 		var step := CompanionBrain.evaluate(
-			comp_feet, player_feet, player_moving, formation_target, home_dir, _data, delta)
+			comp_feet, player_feet, player_moving, formation_target, home_dir, _data, delta, _brain_step)
 		if not step.bark_text.is_empty():
 			Events.companion_barked.emit(self, step.bark_text)
 		goal_feet = step.target_feet
@@ -221,6 +237,14 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 			velocity.x = direction.x * speed
 			velocity.z = direction.z * speed
 
+	# Snap back beside the player if the companion has fallen to a lower level and can't climb back.
+	_recover_if_fallen(delta, player.global_position.y, formation_target)
+	_apply_motion(delta)
+
+
+## Apply gravity + slide, then face the actual movement and drive the walk animation. Shared by
+## the nav and grid follow paths so their post-move handling cannot drift apart.
+func _apply_motion(delta: float) -> void:
 	var before := Vector2(global_position.x, global_position.z)
 	apply_gravity(delta)
 	move_and_slide()
@@ -229,6 +253,23 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	_visual.face(move_delta)
 	_visual.set_walk(move_speed > 0.05, move_speed)
 	_last_feet = Vector2(global_position.x, global_position.z)
+
+
+## Safety net for the unrailed-edge risk: if the companion has dropped more than
+## COMPANION_FALL_RECOVER_HEIGHT below the player for COMPANION_STUCK_SECONDS (fell to a lower level
+## and the navmesh can't climb back), snap it onto the navmesh beside the player. Same-level
+## following never trips it because the height gap stays near zero (replaces grid follow's teleport).
+func _recover_if_fallen(delta: float, player_y: float, rejoin_feet: Vector2) -> void:
+	if player_y - global_position.y <= Config.COMPANION_FALL_RECOVER_HEIGHT:
+		_fall_recover_timer = 0.0
+		return
+	_fall_recover_timer += delta
+	if _fall_recover_timer < Config.COMPANION_STUCK_SECONDS:
+		return
+	var rejoin := Vector3(rejoin_feet.x, player_y, rejoin_feet.y)
+	global_position = NavigationServer3D.map_get_closest_point(_nav_agent.get_navigation_map(), rejoin)
+	velocity = Vector3.ZERO
+	_fall_recover_timer = 0.0
 
 
 ## Speed ramps from a gentle pace near the player up to catch-up speed far away.
@@ -260,7 +301,6 @@ func _grid_follow(delta: float, player: CharacterBody3D) -> void:
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
 	var player_velocity := _read_player_velocity(player)
 	var feet := Vector2(global_position.x, global_position.z)
-	var previous_feet := feet
 	var other_feet := _other_companion_feet()
 	feet = CompanionLogic.update(
 		feet,
@@ -274,14 +314,8 @@ func _grid_follow(delta: float, player: CharacterBody3D) -> void:
 		delta,
 		other_feet,
 	)
-	var move_delta := feet - previous_feet
-	var move_speed := move_delta.length() / delta if delta > 0.0 else 0.0
 	_apply_horizontal_velocity(feet, delta)
-	apply_gravity(delta)
-	move_and_slide()
-	_visual.face(move_delta)
-	_visual.set_walk(move_speed > 0.05, move_speed)
-	_last_feet = Vector2(global_position.x, global_position.z)
+	_apply_motion(delta)
 
 
 func _read_player_velocity(player: CharacterBody3D) -> Vector2:
