@@ -213,24 +213,18 @@ This matches Reynolds (**secondary steering**) + DA ambient (**local POI**) + Fa
 - [x] Player-state autonomous branch **removed** from scene.
 - [x] Core idle files kept for refactor (`companion_idle_logic.gd`, etc.) but **not wired**.
 
-### Phase 1 — Brain skeleton (M3, next coding session)
+### Phase 1 + roam/meow — Shipped (July 2026)
 
-**Files to add**
+Landed on the `NavigationAgent3D` motor (not grid `CompanionLogic`):
 
-- `core/companion/companion_brain.gd` — `evaluate(step_input) -> CompanionBrainStep`
-- `core/companion/companion_brain_step.gd` — goal feet, activity, bark, roam_weight
+- [x] `core/companion/companion_brain.gd` — `evaluate(...) -> CompanionBrainStep` (pure logic).
+- [x] `core/companion/companion_brain_step.gd` — `target_feet`, `hold`, `following`, `activity`, `bark_text`.
+- [x] `config.gd` — `COMPANION_BRAIN_ENABLED` (default **true** so it is visible), `COMPANION_LEASH_SOFT`, `COMPANION_CIRCLE_*`; reuses `COMPANION_WANDER_RADIUS`, `COMPANION_ACTIVITY_*`, `COMPANION_MEOW_*`.
+- [x] `scenes/companion/companion.gd` — brain picks the nav goal when the player is settled near; **follow (formation point) wins** whenever the player moves or the cat strays past the leash.
+- [x] Activities: **wander** (random points), **circle** (orbit), **sit / groom** (hold). Meow on its own timer via `Events.companion_barked` → existing bark UI. Behaviour-flavoured lines added to `CompanionBarkLines`.
+- [x] Verified headlessly: idle player → roam + meow; moving player → follow wins; multi-companion spread holds.
 
-**Files to edit**
-
-- `config.gd` — `COMPANION_BRAIN_ENABLED := false`, leash/urge tunables
-- `scenes/companion/companion.gd` — if brain enabled, merge brain goal then **always** call `CompanionLogic.update` toward merged goal (single path)
-
-**Tests**
-
-- Extend `smoke_test.gd`: brain disabled → unchanged positions.
-- New headless test: brain enabled, synthetic distance → catch-up goal overrides roam.
-
-**Manual:** Toggle brain on in playground; verify follow still works with brain enabled but urge at 0.
+**Not yet (future):** true blended follow+roam weighting (current is a hard tier override, which reads fine for a cat); `CompanionActivity` animation hooks (no clips in `cat.glb` yet); POI markers; personality Resource; debug HUD activity line. The old grid `CompanionIdleLogic`/`CompanionIdleStep` remain unused and can be retired or folded once the nav roam is proven in play.
 
 ### Phase 2 — Roam + activities
 
