@@ -70,7 +70,9 @@ const NAV_SOURCE_GROUP := "navigation_source"
 ## Cell size/height match the default navigation map (0.25) to avoid rasterisation mismatch.
 ## Agent radius/height/climb are exact multiples of the cell dims to avoid precision ceiling.
 const NAV_CELL_SIZE := 0.25
-const NAV_CELL_HEIGHT := 0.25
+## Fine cell height keeps the baked navmesh close to the walk surface so agents below it still
+## advance waypoints (NavigationAgent3D measures arrival in 3D). The nav map is set to match.
+const NAV_CELL_HEIGHT := 0.1
 const NAV_AGENT_RADIUS := 0.25
 const NAV_AGENT_HEIGHT := 0.5
 ## Max vertical ledge the bake will bridge — keeps the CSG-top surfaces connected.
@@ -79,8 +81,9 @@ const NAV_AGENT_MAX_SLOPE_DEG := 45.0
 ## Baked navmesh resource shipped with the playground (regenerate via scenes/tools/bake_playground_navmesh.gd).
 const PLAYGROUND_NAVMESH_PATH := "res://scenes/areas/playground_navmesh.tres"
 # NavigationAgent3D behaviour on the companion.
-const COMPANION_NAV_PATH_DESIRED_DISTANCE := 0.4
-const COMPANION_NAV_TARGET_DESIRED_DISTANCE := 0.4
+## Must exceed the small residual vertical gap between the body and the navmesh above it.
+const COMPANION_NAV_PATH_DESIRED_DISTANCE := 0.5
+const COMPANION_NAV_TARGET_DESIRED_DISTANCE := 0.5
 ## How often the follow goal is pushed to the agent (s); the agent repaths internally as needed.
 const COMPANION_NAV_GOAL_INTERVAL := 0.2
 ## Distance from the goal at which the companion eases to a stop (avoids overshoot jitter).

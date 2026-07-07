@@ -63,6 +63,11 @@ func _build_navigation_region() -> void:
 	_nav_region.name = "CompanionNavRegion"
 	world_offset.add_child(_nav_region)
 
+	# Match the nav map cell dims to the baked navmesh to avoid rasterisation mismatch warnings.
+	var map: RID = _nav_region.get_navigation_map()
+	NavigationServer3D.map_set_cell_size(map, Config.NAV_CELL_SIZE)
+	NavigationServer3D.map_set_cell_height(map, Config.NAV_CELL_HEIGHT)
+
 	var baked: NavigationMesh = load(Config.PLAYGROUND_NAVMESH_PATH) as NavigationMesh
 	if baked != null:
 		_nav_region.navigation_mesh = baked

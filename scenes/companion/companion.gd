@@ -4,6 +4,7 @@ extends GroundedCharacter
 
 @onready var _visual: Node3D = $Visual
 @onready var _model: Node3D = $Visual/Model
+@onready var _nav_agent: NavigationAgent3D = $NavigationAgent3D
 
 var _data := CompanionData.new()
 var _feet_collider: Rect2 = CompanionCollider.feet_rect()
@@ -12,6 +13,7 @@ var _anim: AnimationPlayer
 var _last_feet: Vector2 = Vector2.ZERO
 var _model_fitted := false
 var _editor_snapping := false
+var _nav_goal_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -24,6 +26,17 @@ func _ready() -> void:
 		call_deferred("_refresh_editor_preview")
 		return
 	super._ready()
+	_configure_nav_agent()
+
+
+## Tunables come from config so designers tweak follow feel in one place (AGENTS.md).
+func _configure_nav_agent() -> void:
+	if _nav_agent == null:
+		return
+	_nav_agent.radius = Config.NAV_AGENT_RADIUS
+	_nav_agent.height = Config.NAV_AGENT_HEIGHT
+	_nav_agent.path_desired_distance = Config.COMPANION_NAV_PATH_DESIRED_DISTANCE
+	_nav_agent.target_desired_distance = Config.COMPANION_NAV_TARGET_DESIRED_DISTANCE
 
 
 func _enter_tree() -> void:
@@ -112,20 +125,86 @@ func _physics_process(delta: float) -> void:
 		_update_walk_anim(false, 0.0)
 		return
 
+	var player: CharacterBody3D = GameState.player
+	if player == null:
+		velocity = Vector3.ZERO
+		_update_walk_anim(false, 0.0)
+		return
+
+	# Prefer navmesh follow where a region exists; fall back to grid follow (e.g. village_green).
+	if _navigation_active():
+		_nav_follow(delta, player)
+	else:
+		_grid_follow(delta, player)
+
+
+## True when the agent's navigation map has synchronised and holds at least one baked region.
+func _navigation_active() -> bool:
+	if _nav_agent == null:
+		return false
+	var map: RID = _nav_agent.get_navigation_map()
+	if not map.is_valid():
+		return false
+	# iteration_id is 0 until the map's first synchronisation; querying before then errors.
+	if NavigationServer3D.map_get_iteration_id(map) == 0:
+		return false
+	return NavigationServer3D.map_get_regions(map).size() > 0
+
+
+## NavigationAgent3D follow: steer toward the next path point, arrive and stop near the player.
+func _nav_follow(delta: float, player: CharacterBody3D) -> void:
+	var player_feet := Vector2(player.global_position.x, player.global_position.z)
+	var player_velocity := _read_player_velocity(player)
+	var comp_feet := Vector2(global_position.x, global_position.z)
+	var follow_dist := CompanionLogic.follow_distance(_slot)
+
+	_nav_goal_timer -= delta
+	if comp_feet.distance_to(player_feet) <= follow_dist:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	else:
+		if _nav_goal_timer <= 0.0:
+			var goal := _follow_goal(player_feet, player_velocity)
+			var raw_goal := Vector3(goal.x, player.global_position.y, goal.y)
+			# Snap the goal onto the navmesh so the companion never chases a point off an edge.
+			var map: RID = _nav_agent.get_navigation_map()
+			_nav_agent.target_position = NavigationServer3D.map_get_closest_point(map, raw_goal)
+			_nav_goal_timer = Config.COMPANION_NAV_GOAL_INTERVAL
+		if _nav_agent.is_navigation_finished():
+			velocity.x = 0.0
+			velocity.z = 0.0
+		else:
+			var to_next := _nav_agent.get_next_path_position() - global_position
+			to_next.y = 0.0
+			var direction := to_next.normalized() if to_next.length() > 0.001 else Vector3.ZERO
+			var speed := Config.COMPANION_SPEED
+			var remaining := _nav_agent.distance_to_target()
+			if remaining < Config.COMPANION_NAV_ARRIVE_SLOWDOWN:
+				speed *= clampf(remaining / Config.COMPANION_NAV_ARRIVE_SLOWDOWN, 0.2, 1.0)
+			velocity.x = direction.x * speed
+			velocity.z = direction.z * speed
+
+	var before := Vector2(global_position.x, global_position.z)
+	apply_gravity(delta)
+	move_and_slide()
+	var move_delta := Vector2(global_position.x, global_position.z) - before
+	var move_speed := move_delta.length() / delta if delta > 0.0 else 0.0
+	_update_facing(move_delta)
+	_update_walk_anim(move_speed > 0.05, move_speed)
+	_last_feet = Vector2(global_position.x, global_position.z)
+
+
+## Legacy grid A* follow — retained for areas without a navmesh (PROJECT.md §4 fallback).
+func _grid_follow(delta: float, player: CharacterBody3D) -> void:
 	var grid: CollisionGrid = GameState.collision_grid
 	var astar: AStarGrid2D = GameState.pathfinder
-	var player: CharacterBody3D = GameState.player
-	if grid == null or astar == null or player == null:
+	if grid == null or astar == null:
 		velocity = Vector3.ZERO
 		_update_walk_anim(false, 0.0)
 		return
 
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
-	var player_velocity: Vector2 = player.feet_velocity
-	if player_velocity.length_squared() < 0.01:
-		player_velocity = Vector2(player.velocity.x, player.velocity.z)
-	if player_velocity.length_squared() < 0.01:
-		player_velocity = InputActions.move_vector * Config.PLAYER_SPEED
+	var player_velocity := _read_player_velocity(player)
 	var feet := Vector2(global_position.x, global_position.z)
 	var previous_feet := feet
 	var other_feet := _other_companion_feet()
@@ -151,6 +230,28 @@ func _physics_process(delta: float) -> void:
 	_last_feet = Vector2(global_position.x, global_position.z)
 
 
+func _read_player_velocity(player: CharacterBody3D) -> Vector2:
+	var player_velocity: Vector2 = player.feet_velocity
+	if player_velocity.length_squared() < 0.01:
+		player_velocity = Vector2(player.velocity.x, player.velocity.z)
+	if player_velocity.length_squared() < 0.01:
+		player_velocity = InputActions.move_vector * Config.PLAYER_SPEED
+	return player_velocity
+
+
+## Follow goal in feet space: player position with velocity lead and per-slot lateral spread.
+func _follow_goal(player_feet: Vector2, player_velocity: Vector2) -> Vector2:
+	var goal := player_feet
+	if player_velocity.length_squared() > 0.01:
+		goal += player_velocity * Config.COMPANION_PREDICT_SECONDS
+		var vel_dir := player_velocity.normalized()
+		var perp := Vector2(-vel_dir.y, vel_dir.x)
+		goal += perp * _data.slot_lateral_offset
+	else:
+		goal += _data.idle_ring_offset
+	return goal
+
+
 func _apply_horizontal_velocity(target_feet: Vector2, delta: float) -> void:
 	var offset := target_feet - Vector2(global_position.x, global_position.z)
 	if offset.length_squared() < 0.0001 or delta <= 0.0:
@@ -164,6 +265,11 @@ func _apply_horizontal_velocity(target_feet: Vector2, delta: float) -> void:
 
 
 func get_debug_path() -> PackedVector2Array:
+	if _navigation_active():
+		var nav_path := PackedVector2Array()
+		for point in _nav_agent.get_current_navigation_path():
+			nav_path.append(Vector2(point.x, point.z))
+		return nav_path
 	return _data.path
 
 
