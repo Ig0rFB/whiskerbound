@@ -39,7 +39,7 @@ bash scripts/run_companion_behaviour_test.sh
 | Shift / **Y** | Run |
 | Space / A | Jump |
 | Mouse / right stick | Look |
-| Mouse wheel / **=** / **−** | Zoom in / out |
+| Mouse wheel / **V** **B** / **=** **−** / **L2** **R2** | Zoom in / out |
 | Arrow keys | Pan camera |
 | RMB / R-shoulder | Aim camera |
 | T | Swap aim shoulder |
