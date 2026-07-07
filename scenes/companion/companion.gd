@@ -2,16 +2,13 @@
 extends GroundedCharacter
 ## Lumi — cat companion follow via A* (PROJECT.md §9.2).
 
-@onready var _visual: Node3D = $Visual
-@onready var _model: Node3D = $Visual/Model
+@onready var _visual: CompanionVisual = $Visual
 @onready var _nav_agent: NavigationAgent3D = $NavigationAgent3D
 
 var _data := CompanionData.new()
 var _feet_collider: Rect2 = CompanionCollider.feet_rect()
 var _slot: int = 0
-var _anim: AnimationPlayer
 var _last_feet: Vector2 = Vector2.ZERO
-var _model_fitted := false
 var _editor_snapping := false
 var _nav_goal_timer: float = 0.0
 ## Unit "behind the player" direction, refreshed while the player moves; held while idle.
@@ -53,24 +50,18 @@ func _notification(what: int) -> void:
 	if not Engine.is_editor_hint():
 		return
 	if what == NOTIFICATION_TRANSFORM_CHANGED and is_inside_tree() and not _editor_snapping:
-		_align_visual_to_feet()
+		if _visual != null:
+			_visual.align_feet()
 		call_deferred("_snap_editor_to_floor")
 
 
 func _refresh_editor_preview() -> void:
-	if not is_inside_tree():
+	if not is_inside_tree() or _visual == null:
 		return
-	_model_fitted = false
-	_fit_model_to_feet()
-	_align_visual_to_feet()
+	_visual.reset_fit()
+	_visual.fit_model()
+	_visual.align_feet()
 	call_deferred("_snap_editor_to_floor")
-
-
-func _align_visual_to_feet() -> void:
-	if _visual == null:
-		return
-	# 3D playground: feet on the capsule; GPU depth buffer handles draw order (PROJECT.md §4).
-	_visual.position.y = 0.0
 
 
 ## Drop the body onto world collision so designers only place X/Z in the area scene.
@@ -103,9 +94,7 @@ func setup(slot: int, spawn_feet: Vector2, spawn_height: float = 0.0) -> void:
 	_data.configure_slot(slot)
 	_data.last_progress_pos = spawn_feet
 	_init_formation()
-	_model_fitted = false
-	_fit_model_to_feet()
-	_align_visual_to_feet()
+	_refit_visual()
 	call_deferred("snap_to_floor")
 
 
@@ -118,10 +107,16 @@ func activate(slot: int) -> void:
 	_data.configure_slot(slot)
 	_data.last_progress_pos = _last_feet
 	_init_formation()
-	_model_fitted = false
-	_fit_model_to_feet()
-	_align_visual_to_feet()
+	_refit_visual()
 	call_deferred("snap_to_floor")
+
+
+func _refit_visual() -> void:
+	if _visual == null:
+		return
+	_visual.reset_fit()
+	_visual.fit_model()
+	_visual.align_feet()
 
 
 ## Fan companions out behind the player: a deterministic per-slot angle (0, +A, -A, +2A, ...)
@@ -142,13 +137,13 @@ func _physics_process(delta: float) -> void:
 		return
 	if GameState.mode != GameState.GameMode.GAMEPLAY:
 		velocity = Vector3.ZERO
-		_update_walk_anim(false, 0.0)
+		_visual.set_walk(false, 0.0)
 		return
 
 	var player: CharacterBody3D = GameState.player
 	if player == null:
 		velocity = Vector3.ZERO
-		_update_walk_anim(false, 0.0)
+		_visual.set_walk(false, 0.0)
 		return
 
 	# Prefer navmesh follow where a region exists; fall back to grid follow (e.g. village_green).
@@ -230,8 +225,8 @@ func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	move_and_slide()
 	var move_delta := Vector2(global_position.x, global_position.z) - before
 	var move_speed := move_delta.length() / delta if delta > 0.0 else 0.0
-	_update_facing(move_delta)
-	_update_walk_anim(move_speed > 0.05, move_speed)
+	_visual.face(move_delta)
+	_visual.set_walk(move_speed > 0.05, move_speed)
 	_last_feet = Vector2(global_position.x, global_position.z)
 
 
@@ -258,7 +253,7 @@ func _grid_follow(delta: float, player: CharacterBody3D) -> void:
 	var astar: AStarGrid2D = GameState.pathfinder
 	if grid == null or astar == null:
 		velocity = Vector3.ZERO
-		_update_walk_anim(false, 0.0)
+		_visual.set_walk(false, 0.0)
 		return
 
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
@@ -283,8 +278,8 @@ func _grid_follow(delta: float, player: CharacterBody3D) -> void:
 	_apply_horizontal_velocity(feet, delta)
 	apply_gravity(delta)
 	move_and_slide()
-	_update_facing(move_delta)
-	_update_walk_anim(move_speed > 0.05, move_speed)
+	_visual.face(move_delta)
+	_visual.set_walk(move_speed > 0.05, move_speed)
 	_last_feet = Vector2(global_position.x, global_position.z)
 
 
@@ -326,26 +321,10 @@ func get_debug_slot() -> int:
 	return _slot
 
 
-## Headless tests read fitted mesh metrics through this helper.
+## Headless tests read fitted mesh metrics through this helper (visual metrics + body-level fields).
 func get_visual_debug_state() -> Dictionary:
-	var mesh := _find_first_mesh(_model) if _model else null
-	var state := {
-		"model_fitted": _model_fitted,
-		"mesh_visible": mesh.visible if mesh else false,
-		"has_skin": mesh.skin != null if mesh else false,
-		"has_walk_anim": _anim != null and _anim.has_animation(Config.COMPANION_WALK_ANIM),
-		"model_scale": _model.scale if _model else Vector3.ZERO,
-		"model_pos": _model.position if _model else Vector3.ZERO,
-		"visual_pos": _visual.position if _visual else Vector3.ZERO,
-		"on_floor": is_on_floor(),
-	}
-	if mesh != null:
-		state["mesh_aabb"] = _global_mesh_aabb(mesh)
-		state["mesh_local_aabb"] = mesh.get_aabb()
-		var mat: Material = mesh.get_surface_override_material(0)
-		if mat == null:
-			mat = mesh.get_active_material(0)
-		state["material"] = mat
+	var state: Dictionary = _visual.debug_state() if _visual else {}
+	state["on_floor"] = is_on_floor()
 	return state
 
 
@@ -359,99 +338,3 @@ func _other_companion_feet() -> PackedVector2Array:
 			continue
 		feet.append(Vector2(other.global_position.x, other.global_position.z))
 	return feet
-
-
-func _fit_model_to_feet() -> void:
-	if _model == null or _model_fitted or not is_inside_tree():
-		return
-
-	_model.scale = Vector3.ONE
-	_model.position = Vector3.ZERO
-	_model.rotation = Vector3.ZERO
-
-	var mesh := _find_first_mesh(_model)
-	if mesh == null:
-		push_warning("Companion: no mesh in cat.glb")
-		return
-
-	var local: AABB = mesh.get_aabb()
-	if local.size.y < 0.001:
-		push_warning("Companion: mesh bounds are empty")
-		return
-
-	var fit_scale := Config.COMPANION_MODEL_TARGET_HEIGHT / local.size.y
-	_model.scale = Vector3.ONE * fit_scale
-	# Align mesh AABB bottom to the visual root, then lift slightly above the floor plane.
-	_model.position.y = (
-		-local.position.y * fit_scale + Config.COMPANION_MESH_FLOOR_CLEARANCE
-	)
-	_anim = _find_animation_player(_model)
-	_tweak_mesh_material(mesh)
-	_model_fitted = true
-
-
-func _tweak_mesh_material(mesh: MeshInstance3D) -> void:
-	var mat: Material = mesh.get_active_material(0)
-	if mat == null:
-		return
-	var std := mat.duplicate() as StandardMaterial3D
-	std.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	std.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mesh.set_surface_override_material(0, std)
-
-
-func _global_mesh_aabb(mesh: MeshInstance3D) -> AABB:
-	var box := AABB()
-	var first := true
-	var gt := mesh.global_transform
-	var local: AABB = mesh.get_aabb()
-	for i in 8:
-		var corner: Vector3 = gt * local.get_endpoint(i)
-		if first:
-			box = AABB(corner, Vector3.ZERO)
-			first = false
-		else:
-			box = box.expand(corner)
-	return box
-
-
-func _find_first_mesh(root: Node) -> MeshInstance3D:
-	if root is MeshInstance3D:
-		return root as MeshInstance3D
-	for child in root.get_children():
-		var found := _find_first_mesh(child)
-		if found != null:
-			return found
-	return null
-
-
-func _update_facing(move_delta: Vector2) -> void:
-	if move_delta.length_squared() < 0.0001:
-		return
-	# Free rotation in XZ feet space — +Y is world south (+Z).
-	_visual.rotation.y = (
-		atan2(move_delta.x, move_delta.y) + Config.COMPANION_MODEL_YAW_OFFSET
-	)
-
-
-func _update_walk_anim(moving: bool, move_speed: float) -> void:
-	if _anim == null:
-		return
-	if not moving:
-		if _anim.is_playing():
-			_anim.pause()
-		return
-	if _anim.current_animation != Config.COMPANION_WALK_ANIM:
-		_anim.play(Config.COMPANION_WALK_ANIM)
-	var pace := clampf(move_speed / Config.COMPANION_SPEED, 0.15, 1.5)
-	_anim.speed_scale = pace * Config.COMPANION_WALK_ANIM_SPEED
-
-
-func _find_animation_player(root: Node) -> AnimationPlayer:
-	if root is AnimationPlayer:
-		return root as AnimationPlayer
-	for child in root.get_children():
-		var found := _find_animation_player(child)
-		if found != null:
-			return found
-	return null
