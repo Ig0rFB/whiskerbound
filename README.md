@@ -16,6 +16,7 @@ open -a Godot .
 ```bash
 bash scripts/run_smoke_test.sh
 bash scripts/run_companion_visual_test.sh
+bash scripts/run_companion_behaviour_test.sh
 ```
 
 ## Controls

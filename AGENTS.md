@@ -47,7 +47,7 @@ Igor is a beginner learning Godot. Therefore:
 
 1. Restate the task and list ambiguities before writing code. Ambiguity in a design spec goes back to Igor as a question, never silently reinterpreted.
 2. Make the change (small, typed, documented).
-3. Verify: `bash scripts/run_smoke_test.sh` must pass; companion changes also run `bash scripts/run_companion_visual_test.sh`. Fix all headless and interactive errors and warnings — zero new warnings in the Godot output panel.
+3. Verify: `bash scripts/run_smoke_test.sh` must pass; companion changes also run `bash scripts/run_companion_visual_test.sh` (mesh) and `bash scripts/run_companion_behaviour_test.sh` (navmesh follow + brain). Fix all headless and interactive errors and warnings — zero new warnings in the Godot output panel.
 4. If a step cannot be verified headlessly, list exact manual steps (keys to press, expected behaviour).
 5. Save/load structures changed → test a save/load round trip and note any migration need.
 

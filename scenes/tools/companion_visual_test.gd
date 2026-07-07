@@ -1,16 +1,23 @@
 extends SceneTree
 ## Headless companion mesh assertions — run: bash scripts/run_companion_visual_test.sh
 
-const TARGET_HEIGHT := 0.4
 const MIN_MESH_HEIGHT := 0.25
 const MAX_MESH_HEIGHT := 0.55
 const MIN_MODEL_SCALE := 0.001
+## Mesh placement is checked relative to the companion's feet, since actors stand on elevated
+## CSG (world Y ~6 in the playground), not near the origin.
+const MAX_MESH_BELOW_FEET := 0.05
+const MAX_MESH_TOP_ABOVE_FEET := 0.75
+
+var _failed := false
 
 
 func _initialize() -> void:
 	var main_scene: PackedScene = load("res://scenes/main.tscn")
 	if main_scene == null:
 		_fail("Failed to load main.tscn")
+		_finish()
+		return
 
 	var main: Node = main_scene.instantiate()
 	root.add_child(main)
@@ -19,28 +26,25 @@ func _initialize() -> void:
 
 	var game_state: Node = root.get_node("GameState")
 	var companion: Node = game_state.companion
-	if companion == null:
-		_fail("GameState.companion is null")
-
-	if not companion.has_method("get_visual_debug_state"):
-		_fail("Companion missing get_visual_debug_state()")
+	if companion == null or not companion.has_method("get_visual_debug_state"):
+		_fail("GameState.companion is null or missing get_visual_debug_state()")
+		_finish()
+		return
 
 	var state: Dictionary = companion.get_visual_debug_state()
 	var bind: AABB = state.get("mesh_aabb", AABB())
 	var mat: Material = state.get("material")
+	var feet_y: float = (companion as Node3D).global_position.y
 
 	print("COMPANION_VISUAL: companion_pos=", companion.global_position)
 	print("COMPANION_VISUAL: state=", state)
 
 	if not state.get("model_fitted", false):
 		_fail("Model was not fitted")
-
 	if not state.get("mesh_visible", false):
 		_fail("Companion mesh is not visible")
-
 	if not state.get("has_skin", false):
 		_fail("Companion mesh has no skin (expected animated GLB)")
-
 	if not state.get("has_walk_anim", false):
 		_fail("Companion missing walk animation")
 
@@ -49,17 +53,15 @@ func _initialize() -> void:
 		_fail("Model scale %.4f is too small — armature scale likely still broken" % model_scale.x)
 
 	if bind.size.y < MIN_MESH_HEIGHT or bind.size.y > MAX_MESH_HEIGHT:
-		_fail(
-			"Mesh height %.3f outside [%.2f, %.2f]"
-			% [bind.size.y, MIN_MESH_HEIGHT, MAX_MESH_HEIGHT]
-		)
+		_fail("Mesh height %.3f outside [%.2f, %.2f]" % [bind.size.y, MIN_MESH_HEIGHT, MAX_MESH_HEIGHT])
 
-	if bind.position.y < -0.05:
-		_fail("Mesh bottom below ground: bind.position.y=%.3f" % bind.position.y)
-
-	var top_y := bind.position.y + bind.size.y
-	if top_y > 1.5:
-		_fail("Mesh top too high: %.3f" % top_y)
+	# Placement relative to the feet (companion global Y), not absolute world Y.
+	var bottom_above_feet := bind.position.y - feet_y
+	if bottom_above_feet < -MAX_MESH_BELOW_FEET:
+		_fail("Mesh bottom below feet by %.3f" % -bottom_above_feet)
+	var top_above_feet := bind.position.y + bind.size.y - feet_y
+	if top_above_feet > MAX_MESH_TOP_ABOVE_FEET:
+		_fail("Mesh top %.3f above feet exceeds %.2f" % [top_above_feet, MAX_MESH_TOP_ABOVE_FEET])
 
 	if mat is StandardMaterial3D:
 		var std := mat as StandardMaterial3D
@@ -70,10 +72,15 @@ func _initialize() -> void:
 	else:
 		_fail("Expected StandardMaterial3D override on mesh surface 0")
 
-	print("COMPANION_VISUAL_OK")
-	quit(0)
+	_finish()
 
 
 func _fail(message: String) -> void:
 	push_error(message)
-	quit(1)
+	_failed = true
+
+
+func _finish() -> void:
+	if not _failed:
+		print("COMPANION_VISUAL_OK")
+	quit(1 if _failed else 0)
