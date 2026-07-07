@@ -37,11 +37,12 @@ boring native Godot).
 
 ## Checklist (tick as landed; commit + push per item)
 
-- [ ] Plan document committed (this file)
-- [ ] 1. Config: navmesh bake + agent tunables in `config.gd`
-- [ ] 2. Playground: build + bake `NavigationRegion3D` at runtime from CSG geometry
-- [ ] 3. Companion: `NavigationAgent3D` child + nav motor with grid fallback
-- [ ] 4. Debug path overlay reads the nav path (keep `get_debug_path()` meaningful)
+- [x] Plan document committed (this file)
+- [x] 1. Config: navmesh bake + agent tunables in `config.gd`
+- [x] 2. Playground: attach a `NavigationRegion3D` with a pre-baked navmesh (offline bake tool
+      `scenes/tools/bake_playground_navmesh.gd`; runtime bake fallback kept)
+- [x] 3. Companion: `NavigationAgent3D` child + nav motor with grid fallback, goal snapped to navmesh
+- [x] 4. Debug path overlay reads the nav path (`get_debug_path()` returns the agent path)
 
 ## Verification
 
@@ -52,6 +53,18 @@ boring native Godot).
   physics the companion ends within follow distance of the player.
 - Manual (Igor): F5, walk the player around the playground including onto/around the CSG structures;
   Lumi should path around obstacles (not clip through) and keep pace, stopping near the player.
+
+## Known limitations / follow-ups
+
+- The follow goal is snapped onto the navmesh, so the companion will not chase a point off an
+  edge. It can still, in principle, corner-cut near an unrailed platform edge (no physical wall on
+  the CSG tops). Not observed in the on-platform follow test; revisit with level guard rails or a
+  tighter `path_desired_distance` if it shows up in play.
+- `scenes/companion/companion.gd` is now ~380 lines (over the ~300 guideline). Propose splitting the
+  motor (nav + grid follow) out of the scene script before the brain phase extends it further.
+- Multi-companion RVO avoidance is OFF; debug-spawned extra companions rely on the grid fallback's
+  nudge only where the grid path runs. Enable `NavigationAgent3D` avoidance if multiple companions
+  become a real scenario.
 
 ## Deferred (next phase, after Igor tests)
 
