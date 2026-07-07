@@ -13,6 +13,7 @@ var idle_ring_offset: Vector2 = Vector2.ZERO
 var activity: CompanionActivity.Type = CompanionActivity.Type.NONE
 var activity_timer: float = 0.0
 var wander_target: Vector2 = Vector2.ZERO
+var orbit_angle: float = 0.0
 var meow_cooldown: float = 0.0
 
 
@@ -31,6 +32,7 @@ func reset_autonomous() -> void:
 	activity = CompanionActivity.Type.NONE
 	activity_timer = 0.0
 	wander_target = Vector2.ZERO
+	orbit_angle = 0.0
 	idle_timer = 0.0
 	clear_path()
 

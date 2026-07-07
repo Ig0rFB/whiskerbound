@@ -10,6 +10,11 @@ const LINES: Array[String] = [
 	"...",
 	"Mew mew!",
 	"*stretches*",
+	"*licks paw*",
+	"*grooms*",
+	"Purrrr...",
+	"*flicks tail*",
+	"Mrp!",
 ]
 
 

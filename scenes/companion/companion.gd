@@ -172,28 +172,44 @@ func _navigation_active() -> bool:
 
 
 ## NavigationAgent3D follow: aim for this companion's formation point behind the player, steer along
-## the path with speed that ramps up with distance, and stop once the spot is reached.
+## the path with speed that ramps up with distance, and stop once the spot is reached. When the
+## brain is enabled and the player is settled nearby, the goal comes from the brain (roam/circle/rest).
 func _nav_follow(delta: float, player: CharacterBody3D) -> void:
 	var player_feet := Vector2(player.global_position.x, player.global_position.z)
 	var comp_feet := Vector2(global_position.x, global_position.z)
-	_update_back_dir(player, comp_feet, player_feet)
+	var player_velocity := _read_player_velocity(player)
+	_update_back_dir(player_velocity, comp_feet, player_feet)
 
-	var target_feet := player_feet + _back_dir.rotated(_formation_angle) * (
+	var formation_target := player_feet + _back_dir.rotated(_formation_angle) * (
 		Config.COMPANION_STOP_DISTANCE + _formation_distance_jitter)
+
+	# Default motor goal is the follow formation point; the brain may override it with an autonomy goal.
+	var goal_feet := formation_target
+	var hold := false
+	var following := true
+	if Config.COMPANION_BRAIN_ENABLED:
+		var player_moving := player_velocity.length_squared() > 0.09
+		var step := CompanionBrain.evaluate(
+			comp_feet, player_feet, player_moving, formation_target, _data, delta)
+		if not step.bark_text.is_empty():
+			Events.companion_barked.emit(self, step.bark_text)
+		goal_feet = step.target_feet
+		hold = step.hold
+		following = step.following
+
 	var dist_to_player := comp_feet.distance_to(player_feet)
-	var dist_to_target := comp_feet.distance_to(target_feet)
+	var dist_to_goal := comp_feet.distance_to(goal_feet)
 
 	_nav_goal_timer -= delta
-	var arrived := (
-		dist_to_target <= Config.COMPANION_NAV_TARGET_DESIRED_DISTANCE
-		or dist_to_player <= Config.COMPANION_MIN_PLAYER_GAP
-	)
+	var arrived := hold or dist_to_goal <= Config.COMPANION_NAV_TARGET_DESIRED_DISTANCE
+	if not arrived and following and dist_to_player <= Config.COMPANION_MIN_PLAYER_GAP:
+		arrived = true
 	if arrived:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	else:
 		if _nav_goal_timer <= 0.0:
-			var raw_goal := Vector3(target_feet.x, player.global_position.y, target_feet.y)
+			var raw_goal := Vector3(goal_feet.x, player.global_position.y, goal_feet.y)
 			# Snap the goal onto the navmesh so the companion never chases a point off an edge.
 			var map: RID = _nav_agent.get_navigation_map()
 			_nav_agent.target_position = NavigationServer3D.map_get_closest_point(map, raw_goal)
@@ -227,8 +243,7 @@ func _follow_speed(dist_to_player: float) -> float:
 
 
 ## "Behind the player" tracks the player's movement while walking; holds its last value while idle.
-func _update_back_dir(player: CharacterBody3D, comp_feet: Vector2, player_feet: Vector2) -> void:
-	var player_velocity := _read_player_velocity(player)
+func _update_back_dir(player_velocity: Vector2, comp_feet: Vector2, player_feet: Vector2) -> void:
 	if player_velocity.length_squared() > 0.09:
 		_back_dir = -player_velocity.normalized()
 	elif _back_dir == Vector2.ZERO:

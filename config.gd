@@ -100,6 +100,15 @@ const COMPANION_FORMATION_ANGLE := 0.55
 const COMPANION_FORMATION_JITTER_ANGLE := 0.28
 const COMPANION_FORMATION_JITTER_DISTANCE := 0.5
 
+# Companion brain — autonomous roam/idle + meow when settled near the player (see companion logic.md).
+# Follow always wins: the cat drops roaming the moment the player moves or strays past the leash.
+const COMPANION_BRAIN_ENABLED := true
+## Beyond this distance to the player (or while the player moves) the cat follows instead of roaming.
+const COMPANION_LEASH_SOFT := 3.5
+## Orbit radius/angular speed when the cat circles the player.
+const COMPANION_CIRCLE_RADIUS := 1.6
+const COMPANION_CIRCLE_SPEED := 0.8
+
 # Editor floor snap for scene-placed companions (raycast above/below current XZ)
 const EDITOR_FLOOR_SNAP_RAY_ABOVE := 20.0
 const EDITOR_FLOOR_SNAP_RAY_BELOW := 50.0

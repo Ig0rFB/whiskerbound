@@ -5,6 +5,7 @@ class_name CompanionActivity
 enum Type {
 	NONE,
 	WANDER,
+	CIRCLE,
 	SIT,
 	PLAY,
 	GROOM,
