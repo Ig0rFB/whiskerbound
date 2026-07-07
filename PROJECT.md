@@ -145,8 +145,9 @@ Tie-break with Y if needed (elevated platforms). Static terrain uses normal 3D d
 ### Screen / viewport
 
 ```
-Fixed internal resolution:  1920 × 1080
-Window:                     scalable with letterboxing (black bars)
+UI design base:             1920 × 1080 (GameSettings.UI_BASE_RESOLUTION)
+Stretch:                    canvas_items — UI scales with resolution, 3D renders at window size
+Default window:             3200 × 1800 (Config.VIEWPORT_*); presets in GameSettings.RESOLUTION_PRESETS
 Target FPS:                 60
 ```
 
@@ -322,8 +323,8 @@ const COLLISION_INSET := 0.1
 const COLLISION_LAYER_WORLD := 1
 const COLLISION_LAYER_CHARACTER := 2
 const CHARACTER_BODY_RADIUS := 0.25
-const VIEWPORT_WIDTH := 2560
-const VIEWPORT_HEIGHT := 1440
+const VIEWPORT_WIDTH := 3200
+const VIEWPORT_HEIGHT := 1800
 const TARGET_FPS := 60
 ```
 
