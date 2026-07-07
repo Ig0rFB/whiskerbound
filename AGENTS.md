@@ -17,7 +17,7 @@ Igor is a beginner learning Godot. Therefore:
 
 - Godot 4.7, GDScript only. No C#, no GDExtension.
 - Implement milestones **in order** per `PROJECT.md` §13. Do not start later-milestone work early without approval.
-- **Collision model** (`PROJECT.md` §4): player/NPC/companion blocking uses **3D `CharacterBody3D` physics** (GDQuest reference player for the protagonist; `GroundedCharacter` for companion; reference `NPCBody` for playground NPCs). The 2D `CollisionGrid` is for companion pathfinding, minimap, and debug — not player wall collision in the playground. Do not revert actors to grid-sampled Y or `Node3D` roots.
+- **Collision model** (`PROJECT.md` §4): player/NPC/companion blocking uses **3D `CharacterBody3D` physics** (GDQuest reference player for the protagonist; `GroundedCharacter` for companion; reference `NPCBody` for playground NPCs). Companion locomotion in the playground is **`NavigationAgent3D` on a baked `NavigationRegion3D`**; the 2D `CollisionGrid` is for minimap, debug, tests, and companion pathfinding only as the navmesh fallback (e.g. `village_green`) — never player wall collision. Do not revert actors to grid-sampled Y or `Node3D` roots.
 - **`core/` layering** (full rules in `PROJECT.md` §6.1): no autoload references, no scene-tree lookups outside own children, no `res://` scene paths. Pure-logic scripts must not extend `Node`. Sole Node-base exception: `core/world/grounded_character.gd`.
 - **Signals up, calls down.** Parents may call children; children signal upward. Cross-scene communication via `Events` autoload. Never `get_parent().do_thing()` or `get_node("../../X")`.
 - Placeholder primitives until real art (spec: `PROJECT.md` §14). No pixel art, no voxels.

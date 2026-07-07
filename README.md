@@ -53,6 +53,6 @@ Boot into the **playground**. Walk to an NPC and **aim your crosshair at them** 
 
 ## Stack
 
-Godot 4.7 · GDScript · Forward+ · GDQuest `untitled-game` player (`scenes/player/gdquest/`, adapted via `whiskerbound_player.gd`)
+Godot 4.7 · GDScript · Forward+ · GDQuest `untitled-game` player (`scenes/player/gdquest/`, adapted via `whiskerbound_player.gd`) · companion follow via `NavigationAgent3D` on a baked navmesh
 
 See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.1** (player), **§9.3** (NPC interaction), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics). Player/interaction source of truth: `reference/untitled-game/`.

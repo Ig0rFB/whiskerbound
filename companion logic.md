@@ -4,6 +4,8 @@
 **Author:** Igor + agent (research-backed)  
 **Goal:** Give companions their own continuous “thinking” loop — roaming, idling, and vocalising — **while always respecting follow** as the highest-priority locomotion need. This replaces the failed approach of branching follow vs autonomous based on **player idle/walk state**.
 
+> **Update (July 2026):** the **Motor** layer is now realised as a `NavigationAgent3D` follow on a baked `NavigationRegion3D` (see `PROJECT.md` §4 / §9.2 and `companion-navigation-plan.md`). The brain phases below build on that nav motor; where this doc says `CompanionLogic` "follow motor", read it as the **grid fallback**. The follow goal is already a fanned point behind the player, so the brain adds **roam/activity/vocalise** on top of the nav follow rather than replacing it.
+
 ---
 
 ## 1. Why the current approach failed
@@ -154,7 +156,7 @@ We tried:
 ┌─────────────────────────────────────────────────────────┐
 │  scenes/companion/companion.gd  (Motor)                  │
 │  - read brain output                                    │
-│  - CompanionLogic pathing + _apply_horizontal_velocity  │
+│  - NavigationAgent3D follow (grid CompanionLogic fallback)│
 │  - AnimationPlayer + Events.companion_barked            │
 └───────────────────────────┬─────────────────────────────┘
                             │ CompanionBrainStep (data)
@@ -254,7 +256,7 @@ This matches Reynolds (**secondary steering**) + DA ambient (**local POI**) + Fa
 
 | Asset | Action |
 |-------|--------|
-| `companion_logic.gd` | **Keep** — follow pathing, stuck recovery |
+| `companion_logic.gd` | **Keep** — grid follow fallback + stuck recovery (nav motor is primary) |
 | `companion_idle_logic.gd` | **Refactor** → roam/POI helper; delete player-idle gates |
 | `companion_activity.gd`, `companion_bark_lines.gd` | **Keep** |
 | `TpcPlayer.is_locomotion_idle()` | **Optional** future consideration input only — not a branch gate |

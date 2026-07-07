@@ -68,6 +68,7 @@ boring native Godot).
 
 ## Deferred (next phase, after Igor tests)
 
-- Update `PROJECT.md` section 4 / section 9.2, `README.md`, `companion logic.md` to describe the nav model.
-- Companion brain: roam/circle/stop, random meow + lines (bark lines already exist), idle cat
+- [x] Update `PROJECT.md` section 4 / section 9.2, `README.md`, `companion logic.md`, `AGENTS.md`
+  to describe the nav model and the follow tuning.
+- [ ] Companion brain: roam/circle/stop, random meow + lines (bark lines already exist), idle cat
   behaviours. Blend follow with companion-owned urges per `companion logic.md`.
