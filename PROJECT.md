@@ -679,12 +679,14 @@ Build in order. Each milestone = playable build.
 
 ### M3: Companion
 
-- [x] Lumi follows via AStarGrid2D
-- [x] Stop distance, repath, stuck teleport fallback
+- [x] Lumi follows via `NavigationAgent3D` on a baked navmesh (grid A* `CompanionLogic` fallback for areas without one) — §4, §9.2
+- [x] Fanned follow point behind the player, distance-ramped speed, multi-companion spread
 - [x] Depth sort by Z (3D playground uses GPU depth; 2D Y-bias reserved for isometric areas)
-- [x] **Autonomous idle (logic)** — wander near idle player; sit / play / groom state machine in `core/companion/`
+- [x] **Autonomous brain** (`CompanionBrain`, `core/companion/`) — wander / circle / sit / groom near an idle player; follow always wins. Old grid `CompanionIdleLogic` retired.
 - [x] **Meow barks** — random speech bubble via `Events.companion_barked` + `ui/companion_bark.tscn`
+- [x] Presentation split into `CompanionVisual` (model fit / walk anim / facing) on the `Visual` child
 - [ ] Idle animation clips in `cat.glb` (`sit`, `play`, `groom`) — names wired in `config.gd`; art pending
+- [ ] Optional: blended follow+roam weighting and `NavigationAgent3D` RVO avoidance (current is a tier override; physics already prevents overlap)
 
 ### M4: NPC + dialogue
 
