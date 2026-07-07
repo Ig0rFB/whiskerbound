@@ -66,17 +66,21 @@ boring native Godot).
   nudge only where the grid path runs. Enable `NavigationAgent3D` avoidance if multiple companions
   become a real scenario.
 
-### Code-review findings (open)
+### Code-review findings (resolved)
 
-- **No stuck recovery on the nav path.** The grid follow teleports beside the player after
-  `COMPANION_STUCK_SECONDS`; the nav motor has no equivalent, so a cat stranded on a disconnected
-  navmesh island (or wedged) never rejoins. Add a stuck timer + snap-to-player fallback to `_nav_follow`.
-- **Per-frame allocations in `_physics_process`** (against AGENTS.md): `CompanionBrain.evaluate`
-  returns a fresh `CompanionBrainStep` each frame, and `_navigation_active()` calls
-  `NavigationServer3D.map_get_regions()` (allocates an Array) each frame. Reuse a preallocated step,
-  and cache nav-availability per area load.
-- **Duplicated post-move tail** in `_nav_follow` / `_grid_follow` (gravity, move_and_slide, facing,
-  walk anim) — extract a shared helper.
+- [x] **Fall recovery on the nav path.** A companion that drops `COMPANION_FALL_RECOVER_HEIGHT`
+  below the player for `COMPANION_STUCK_SECONDS` snaps back onto the navmesh beside them
+  (`_recover_if_fallen`). Chosen over a distance-based stuck timer because the playground ground
+  plane is fully connected — a fallen cat walks back *under* the platform and reads as XZ-arrived, so
+  height, not distance, is the reliable stranding signal. Regression-tested (`_check_fall_recovery`).
+- [x] **Per-frame allocations removed.** `CompanionBrain.evaluate` fills a reused
+  `CompanionBrainStep`; `_navigation_active()` caches availability per area (reset in
+  `_init_formation`) instead of calling `map_get_regions()` each frame.
+- [x] **Shared post-move tail** extracted to `_apply_motion` (used by nav and grid follow).
+
+Remaining note: follow distance is XZ-only, so a cat directly beneath a low platform can read as
+arrived until the fall timer fires. Acceptable given the nav goal is snapped to the mesh (falls are
+rare); revisit with 3D-aware arrival if it shows up in play.
 
 ## Deferred (next phase, after Igor tests)
 
