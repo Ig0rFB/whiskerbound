@@ -2,8 +2,10 @@ extends Node
 ## Global tunables — see PROJECT.md §6.4.
 
 # Viewport
-const VIEWPORT_WIDTH := 2560
-const VIEWPORT_HEIGHT := 1440
+# Default window resolution (larger than the 1920x1080 UI design base, so the window opens big and
+# the UI scales up). Players can change it in Settings (GameSettings.RESOLUTION_PRESETS).
+const VIEWPORT_WIDTH := 3200
+const VIEWPORT_HEIGHT := 1800
 const TARGET_FPS := 60
 
 # Physics layers (world CSG / static mesh = 1, characters = 2)

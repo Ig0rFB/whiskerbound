@@ -8,13 +8,23 @@ const SECTION := "game"
 
 const RESOLUTION_PRESETS: Array[Vector2i] = [
 	Vector2i(1280, 720),
+	Vector2i(1366, 768),
 	Vector2i(1600, 900),
 	Vector2i(1920, 1080),
+	Vector2i(1920, 1200),
 	Vector2i(2560, 1440),
+	Vector2i(2560, 1600),
+	Vector2i(3200, 1800),
+	Vector2i(3440, 1440),
+	Vector2i(3840, 2160),
 ]
 
-const MINIMAP_SIZE_MIN := 120
-const MINIMAP_SIZE_MAX := 280
+## Fixed design resolution the UI is authored against. Canvas items scale by window / this, so the
+## HUD, minimap, and menus grow with resolution while the 3D world renders at the window's size.
+const UI_BASE_RESOLUTION := Vector2i(1920, 1080)
+
+const MINIMAP_SIZE_MIN := 180
+const MINIMAP_SIZE_MAX := 400
 const MINIMAP_SIZE_STEP := 8
 
 var minimap_panel_size: int = Config.MINIMAP_PANEL_SIZE
@@ -73,7 +83,11 @@ func apply_viewport() -> void:
 		return
 	var window := get_window()
 	window.size = Vector2i(viewport_width, viewport_height)
-	window.content_scale_size = Vector2i(viewport_width, viewport_height)
+	# Scale the UI up with resolution: canvas-item stretch against a fixed design base. The 3D
+	# world still renders at the full window size, so only the 2D UI grows.
+	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	window.content_scale_size = UI_BASE_RESOLUTION
 
 
 func get_resolution_index() -> int:
