@@ -89,7 +89,6 @@ Mechanic and level specs come from the narrative designer. Before implementing: 
 
 ### Historical / do not revive
 
-- `addons/JehenoThirdPersonController/` — unused at runtime (prototype textures only)
-- `scenes/player/tpc_player.gd` — legacy adapter
+- Deleted TPC / Jeheno third-person addon and `tpc_player.gd` — player is GDQuest-only; do not restore
 - Fixed OOTS `camera_rig.tscn` — editor preview only; gameplay uses GDQuest orbit camera
 - Grid feet-sampling as **player** wall collision — replaced by 3D physics (§4)

@@ -13,7 +13,7 @@ Imported from `reference/untitled-game/` (GDQuest character packs and shared art
 | Adventurer (man) | `assets/models/characters/player/Adventurer-man.glb` | Future selectable protagonist |
 | Adventurer (woman) | `assets/models/characters/player/Adventurer-woman.glb` | Future selectable protagonist |
 
-Gameplay uses the **GDQuest reference controller** (`reference/untitled-game/`), not the unused Jeheno TPC addon.
+Gameplay uses the **GDQuest reference controller** (`reference/untitled-game/`). Do not revive deleted TPC addons.
 
 ## Companion
 
@@ -45,7 +45,7 @@ Shared shaders and eye mask: `addons/gdquest_models_shared/`.
 |-------|------|-------|
 | Grid material | `assets/materials/reference/grid_mat.tres` | From reference test map |
 | Colour mats | `assets/materials/reference/*_mat.tres` | Red, blue, green, yellow |
-| Prototype grid texture | `addons/JehenoThirdPersonController/Arts/godot-prototype-texture/` | Used by `playground.tscn` ground |
+| Prototype grid texture | `assets/materials/reference/texture_07.png` | Playground / prototype ground |
 
 ## Playground layout
 
@@ -64,6 +64,5 @@ Shared shaders and eye mask: `addons/gdquest_models_shared/`.
 
 ## Not used at runtime
 
-- `addons/JehenoThirdPersonController/` — superseded by GDQuest player (kept in repo for prototype textures only)
-- `scenes/player/tpc_player.gd` — legacy Jeheno adapter
 - `reference/untitled-game/addons/gdquest_model_viewer_3d/` — editor-only model viewer plugin
+- Deleted TPC addon / `tpc_player.gd` — do not restore; player is GDQuest-only
