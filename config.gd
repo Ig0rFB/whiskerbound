@@ -52,7 +52,7 @@ const COMPANION_MODEL_TARGET_HEIGHT := 0.4
 const COMPANION_MESH_FLOOR_CLEARANCE := 0.15
 const COMPANION_WALK_ANIM := "walk"
 const COMPANION_WALK_ANIM_SPEED := 1.0
-# Placeholder names — wire when cat.glb gains clips (§9.2; see companion logic.md).
+# Placeholder names — wire when cat.glb gains clips (§9.2; see docs/companion-brain.md).
 const COMPANION_ANIM_SIT := "sit"
 const COMPANION_ANIM_PLAY := "play"
 const COMPANION_ANIM_GROOM := "groom"
@@ -102,7 +102,7 @@ const COMPANION_FORMATION_ANGLE := 0.55
 const COMPANION_FORMATION_JITTER_ANGLE := 0.28
 const COMPANION_FORMATION_JITTER_DISTANCE := 0.5
 
-# Companion brain — autonomous roam/idle + meow when settled near the player (see companion logic.md).
+# Companion brain — autonomous roam/idle + meow when settled near the player (see docs/companion-brain.md).
 # Follow always wins: the cat drops roaming the moment the player moves or strays past the leash.
 const COMPANION_BRAIN_ENABLED := true
 ## Beyond this distance to the player (or while the player moves) the cat follows instead of roaming.

@@ -1,10 +1,10 @@
 class_name CompanionBrain
 ## Companion autonomy: follow always wins; when the player is settled nearby the cat roams, circles,
-## sits, or grooms, and meows on its own timer (PROJECT.md §9.2, companion logic.md).
+## sits, or grooms, and meows on its own timer (PROJECT.md §9.2, docs/companion-brain.md).
 ##
 ## Pure logic — no Node, no scene lookups. The motor (companion.gd) applies target_feet / hold and
 ## emits the bark. Behaviour is chosen from companion-owned timers and distance, never player state
-## machine flags (the coupling that broke the earlier attempt — see companion logic.md §1).
+## machine flags (the coupling that broke the earlier attempt — see docs/archive/companion-brain-research.md §1).
 
 ## Squared distance at which a wander target counts as reached (~0.4 m).
 const REACH_DIST_SQ := 0.16

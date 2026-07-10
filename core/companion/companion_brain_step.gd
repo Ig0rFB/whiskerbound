@@ -1,5 +1,5 @@
 class_name CompanionBrainStep
-## One companion brain tick — pure data the motor applies (PROJECT.md §9.2, companion logic.md).
+## One companion brain tick — pure data the motor applies (PROJECT.md §9.2, docs/companion-brain.md).
 
 
 ## Feet-space point the companion should navigate toward this tick.

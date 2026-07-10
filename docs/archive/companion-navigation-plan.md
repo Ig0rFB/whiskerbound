@@ -1,5 +1,8 @@
 # Companion Navigation Revamp - Plan
 
+> **ARCHIVED — SHIPPED.** Do not implement from this file. Live truth: `PROJECT.md` §4 / §9.2.
+> Brain follow-ups: `docs/companion-brain.md`.
+
 Replace the companion's grid-A* locomotion with Godot-native `NavigationAgent3D` +
 `NavigationRegion3D`, keeping the 2D `CollisionGrid` for minimap/debug/tests (PROJECT.md section 4
 dual-layer model). Follow-quality only; the companion "brain" (roam/meow/cat behaviour) is a
@@ -84,7 +87,6 @@ rare); revisit with 3D-aware arrival if it shows up in play.
 
 ## Deferred (next phase, after Igor tests)
 
-- [x] Update `PROJECT.md` section 4 / section 9.2, `README.md`, `companion logic.md`, `AGENTS.md`
-  to describe the nav model and the follow tuning.
-- [ ] Companion brain: roam/circle/stop, random meow + lines (bark lines already exist), idle cat
-  behaviours. Blend follow with companion-owned urges per `companion logic.md`.
+- [x] Update `PROJECT.md` section 4 / section 9.2, `README.md`, companion docs, `AGENTS.md`
+      to describe the nav model and the follow tuning.
+- [x] Companion brain: roam/circle/stop, random meow + lines — see `docs/companion-brain.md`.

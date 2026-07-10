@@ -2,7 +2,7 @@
 
 3D exploration and narrative adventure — Godot 4, GDQuest third-person playground, cat companion follow.
 
-**Status:** M5 next (area transitions) — see `PROJECT.md` §13. M3 companion autonomy in progress (idle wander, meows). M6 polish landed early: playground, debug HUD, grounded companion.
+**Status:** M5 next (area transitions) — see `PROJECT.md` §13. M3 brain/meow shipped; leftover M3 = idle anim clips (polish). M6 polish landed early: playground, debug HUD, grounded companion.
 
 ## Quick start
 
@@ -56,4 +56,4 @@ Boot into the **playground**. Walk to an NPC and **aim your crosshair at them** 
 
 Godot 4.7 · GDScript · Forward+ · GDQuest `untitled-game` player (`scenes/player/gdquest/`, adapted via `whiskerbound_player.gd`) · companion follow via `NavigationAgent3D` on a baked navmesh
 
-See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.1** (player), **§9.3** (NPC interaction), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics). Player/interaction source of truth: `reference/untitled-game/`.
+See `PROJECT.md` for architecture — **§4** (dual-layer 3D physics + logic grid), **§9.1** (player), **§9.3** (NPC interaction), **§13** (milestones). `AGENTS.md` holds coding standards and workflow. Companion brain: `docs/companion-brain.md`. Prototype reference: [whiskerbound-2d-prototype](https://github.com/Ig0rFB/whiskerbound-2d-prototype) (companion AI only — player collision is 3D physics). Player/interaction source of truth: `reference/untitled-game/`.

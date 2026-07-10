@@ -13,7 +13,7 @@ Imported from `reference/untitled-game/` (GDQuest character packs and shared art
 | Adventurer (man) | `assets/models/characters/player/Adventurer-man.glb` | Future selectable protagonist |
 | Adventurer (woman) | `assets/models/characters/player/Adventurer-woman.glb` | Future selectable protagonist |
 
-Gameplay uses the **GDQuest reference controller** (`reference/untitled-game/`), not Jeheno TPC.
+Gameplay uses the **GDQuest reference controller** (`reference/untitled-game/`), not the unused Jeheno TPC addon.
 
 ## Companion
 

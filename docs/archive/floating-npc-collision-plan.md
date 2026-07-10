@@ -1,5 +1,8 @@
 # Floating NPC Collision - Review & Fix Plan
 
+> **ARCHIVED.** Code items A/B/D are **shipped**. E/F/G remain **blocked on Igor** — do not
+> implement them without approval. Live truth: `PROJECT.md` §9.3, `scenes/npc/reference_npc.gd`.
+
 Status of the floating-NPC (Bat) collision implementation in `scenes/npc/reference_npc.gd`,
 plus the fixes agreed with Igor. Pick up from the checklist in section 4.
 

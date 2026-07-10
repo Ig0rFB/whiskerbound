@@ -1,6 +1,6 @@
 # WHISKERBOUND — Project Brief & Architecture Document (3D / Godot)
 
-> **Status**: M5 next (area transitions — see §13). **M3 companion autonomy** in progress (idle wander, activities, meows). M6 items landed early: GDQuest playground, unified debug HUD, grounded companion.
+> **Status**: **M5 next** (area transitions — see §13). M3 brain/meow **shipped**; remaining M3 = idle anim clips + optional blend (polish only). M6 items landed early: GDQuest playground, unified debug HUD, grounded companion.
 > **Version**: 0.1.0  
 > **Engine**: Godot 4.7 (Forward+)  
 > **Language**: GDScript  
@@ -42,17 +42,17 @@ A completed Odin/Raylib prototype exists in `whiskerbound-2d-prototype`. Reuse i
 
 | From 2D prototype | Status in 3D |
 |---|---|
-| A* companion follow, repath, stuck teleport | **Active** — `core/companion/`, `AStarGrid2D` on XZ |
+| Companion follow, repath, stuck recovery | **Active** — primary: `NavigationAgent3D` + baked navmesh (§4); grid A* (`CompanionLogic` / `AStarGrid2D`) is **fallback** only (e.g. `village_green`) |
 | LDtk-style entity concepts (spawns, transitions, NPC markers) | **Active** — reimplemented as Godot markers |
 | Event-driven decoupling, milestone structure | **Active** |
 | Feet-only grid collision + wall sliding for **player** | **Replaced** — player uses GDQuest reference `CharacterBody3D` physics (§4, §9.1) |
-| 2D collision map as sole world collision | **Partial** — logic grid remains for companion pathfinding, minimap, debug; world blocking is 3D physics |
+| 2D collision map as sole world collision | **Partial** — logic grid remains for minimap, debug, tests, and companion **fallback** pathfinding; world blocking is 3D physics |
 
 ---
 
 ## 2. Art direction
 
-
+Placeholder primitives until real art (§14). Warm stylised 3D (see reference games in §1) — not pixel art, not voxels.
 
 ### Lighting
 
@@ -62,6 +62,7 @@ A completed Odin/Raylib prototype exists in `whiskerbound-2d-prototype`. Reuse i
 
 ### Colour palette (default biome)
 
+Not locked yet — use §14 placeholder colours until Yvonne sets a biome palette.
 
 ---
 
@@ -96,41 +97,9 @@ Map the 2D prototype convention (x, y tile coords) → 3D world (x, 0, z) where 
 
 New spawned companions should inherit `GroundedCharacter` unless a scene overrides body size. **Full implementation guide: §9.0.**
 
-### Legacy OOTS camera rig (editor only)
+### Historical — OOTS fixed camera (do not revive for gameplay)
 
-```
-Camera3D (child of CameraRig node):
-
-  Projection:     PERSPECTIVE
-  FOV:            35–45° (lower = more isometric feel; start at 40°)
-
-  Rig rotation (fixed, never changed by player input):
-    Y rotation:   0°    (axis-aligned — camera south, looking north; NOT 45° diagonal)
-    X rotation:  −42°   (elevated oblique — OOTS / Pokémon overworld feel)
-
-  Rig offset from player target (local space, applied after rotation):
-    Distance:     ~18 units from target (adjust until ~14 tiles fit vertically)
-    Height bias:  target at player chest (Y ≈ 0.9 on a 0.8-tall character)
-
-  Follow behaviour:
-    Target:       player CharacterBody3D global_position (XZ) + chest height
-    Smoothing:    lerp factor 8.0 * delta (same feel as 2D prototype)
-    Snap:         instant reposition on area load or zoom change
-
-  Clamp:
-    Keep the view inside area bounds so the player never walks off-screen edge.
-    Clamp rig target XZ so the viewport frustum stays inside the area AABB,
-    with padding of half-viewport in world units.
-
-  Zoom (optional V1 stretch):
-    Not required for M1. If added later: adjust rig distance, not FOV.
-    Re-anchor on zoom change (no sideways drift).
-
-  Forbidden in V1:
-    - Player camera rotation (mouse/right stick)
-    - First-person
-    - Over-the-shoulder
-```
+`scenes/camera/camera_rig.tscn` is **editor preview only**. Gameplay uses the GDQuest orbit camera above. Do not reintroduce a fixed-angle player camera without an explicit design decision.
 
 ### Depth sorting (characters & props)
 
@@ -177,7 +146,7 @@ When adding geometry or actors to **playground**, use the playground column. Whe
 - **Movement:** `move_forward` / `move_backward` / `move_left` / `move_right` input actions; gravity curves; coyote-time jump buffer
 - **Camera:** `OrbitView` spring arm; zoom via `zoom_in` / `zoom_out`
 - **Whiskerbound adapter (`WhiskerboundPlayer`):** `feet_velocity` for companion AI; `GameState` / `Events` hooks; interaction ray with companion exceptions; debug stats panel toggled with **H** (prompt is separate — see §9.3)
-- **Source of truth:** `reference/untitled-game/Player/` — copy/adapt, do not reimplement from Jeheno
+- **Source of truth:** `reference/untitled-game/Player/` — copy/adapt; do not revive unused TPC addons (see AGENTS.md Historical)
 
 **Companions — `GroundedCharacter`:**
 
@@ -277,27 +246,29 @@ ui/             → Control nodes; UI logic separate from layout where practical
 
 ### 6.2 Data-oriented state
 
-Central `GameState` autoload holds world state as plain data:
+Central `GameState` autoload holds world refs and mode as plain data (`autoloads/game_state.gd` — as-built):
 
 ```gdscript
-# autoloads/game_state.gd
+# autoloads/game_state.gd (simplified)
 var mode: GameMode = GameMode.GAMEPLAY
-var world: WorldData
-var entities: EntityStore      # parallel arrays or typed dictionaries
-var player_entity_id: int = -1
-var companion_ids: Array[int] = []
-var camera_rig_state: CameraState
-var quest_flags: Dictionary = {}
 var current_area_id: String = ""
-# ...
+var player: CharacterBody3D = null
+var camera_rig: Node3D = null
+var collision_grid: CollisionGrid = null
+var pathfinder: AStarGrid2D = null
+var companion: Node3D = null
+var companions: Array[Node3D] = []
+var npcs: Array = []
+var quest_flags: Dictionary = {}
+# + dialogue / interact / debug HUD flags — see the script
 ```
 
-Start with parallel arrays (match 2D prototype SoA). Do not over-engineer ECS.
+Do not invent an ECS or `EntityStore` layer. If parallel-array SoA becomes necessary later, document the migration here first.
 
 ### 6.3 Event-driven decoupling
 
 ```gdscript
-# autoloads/events.gd
+# autoloads/events.gd — as-built signals (plus debug helpers)
 signal player_interacted(source_id: int, target_id: int)
 signal dialogue_started(npc_id: int)
 signal dialogue_ended
@@ -306,9 +277,12 @@ signal puzzle_solved(puzzle_id: String)
 signal area_entered(area_id: String)
 signal cat_found(cat_id: String)
 signal combat_hit(attacker_id: int, target_id: int)
+signal companion_barked(companion: Node3D, text: String)
+signal interact_target_changed(target_name: String)
+signal interactable_triggered(owner: Node)
 ```
 
-Systems emit signals; listeners connect in `_ready` or bootstrap. Flush transient events at end of frame if using a queue pattern.
+Systems emit signals; listeners connect in `_ready` or bootstrap. Several signals (combat, cat collection, puzzles) are reserved for later milestones — emit only when that feature lands.
 
 ### 6.4 Configuration as data
 
@@ -337,6 +311,7 @@ whiskerbound/
 ├── project.godot
 ├── config.gd                    # global tunables: physics layers, speeds, colours
 ├── PROJECT.md / README.md / AGENTS.md
+├── docs/                        # live companion-brain.md; archive/ = shipped plans (not TODOs)
 ├── autoloads/
 │   ├── game_state.gd            # world refs, mode, companions, NPCs
 │   ├── game_settings.gd         # resolution, minimap size (persisted)
@@ -375,7 +350,7 @@ whiskerbound/
 │   └── companion_bark.gd/.tscn  # meow speech bubble
 ├── scripts/                     # run_smoke_test.sh, run_companion_visual_test.sh, run_companion_behaviour_test.sh
 ├── assets/                      # audio, fonts, materials, models (see assets/ASSETS.md)
-├── addons/                      # GDQuest character packs, anthonyec.camera_preview; Jeheno (legacy, unused at runtime)
+├── addons/                      # GDQuest character packs, anthonyec.camera_preview; unused TPC addon kept for textures only
 └── reference/                   # whiskerbound-2d-prototype, untitled-game (player/NPC interaction source)
 ```
 
@@ -389,7 +364,7 @@ Planned but not yet created: `data/` (dialogue and area resources once content o
 
 - `input/input_actions.gd` polls hardware into abstract actions each frame
 - `scenes/player/whiskerbound_player.gd` handles player physics via the GDQuest state machine; `handle_interaction()` runs each physics frame in gameplay
-- `scenes/companion/companion.gd` runs its own `_physics_process`, delegating to `core/companion/companion_logic.gd`
+- `scenes/companion/companion.gd` runs its own `_physics_process`: `CompanionBrain` may pick a roam/activity goal when settled; otherwise the **nav motor** steers toward the formation point (`NavigationAgent3D`), with grid `CompanionLogic` as fallback
 - Playground NPCs use `scenes/npc/reference_npc.gd` (reference `NPCBody` physics)
 - `ui/game_ui.gd` orchestrates HUD, pause, dialogue; listens to `Events.interactable_triggered` and `Events.interact_target_changed`
 - Mode gating: gameplay scripts early-return unless `GameState.mode == GameMode.GAMEPLAY`; dialogue and pause suppress movement input
@@ -400,7 +375,7 @@ Planned but not yet created: `data/` (dialogue and area resources once content o
 2. Decision logic lives in `core/`; scene scripts translate decisions into `velocity`, `move_and_slide()`, and animation.
 3. Cross-system communication goes through `Events` signals, never direct node references between unrelated scenes.
 
-A central system dispatcher (MovementSystem, CompanionSystem, ...) was the original plan and may return if per-scene updates become hard to reason about, but do not migrate speculatively.
+A central system dispatcher was an early idea — **do not migrate** to one unless per-scene updates become hard to reason about.
 
 ---
 
@@ -469,7 +444,7 @@ func _physics_process(delta: float) -> void:
 
 | Actor | Pattern | File |
 |---|---|---|
-| **Moving** (companion) | A* sets target feet on XZ → `_apply_horizontal_velocity()` → `apply_gravity()` → `move_and_slide()` | `scenes/companion/companion.gd` |
+| **Moving** (companion) | Nav (or grid fallback) sets XZ goal → horizontal velocity → `apply_gravity()` → `move_and_slide()` | `scenes/companion/companion.gd` |
 | **Static** (legacy NPC) | `velocity.x/z = 0` each frame → `apply_gravity()` → `move_and_slide()` | `scenes/npc/npc.gd` (village only) |
 | **Playground NPC** | Reference `NPCBody` — scene Y, optional floating motion | `scenes/npc/reference_npc.gd` |
 
@@ -515,7 +490,7 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
   - Hit collider (or parent) with `Interactable` child → show prompt; **E** calls `interact(user)`
 - **Whiskerbound hooks:** `feet_velocity` (XZ) for companion AI; `GameState.camera_rig` = `OrbitView`; reference debug stats hidden unless **H**; companion bodies excluded from interaction ray
 - **Do not** edit scripts under `scenes/player/gdquest/` in place — fix in `whiskerbound_player.gd` or re-copy from `reference/untitled-game/`
-- **Legacy:** `addons/JehenoThirdPersonController/` and `scenes/player/tpc_player.gd` are **not** used at runtime
+- **Do not revive:** unused TPC addon / `tpc_player.gd` (AGENTS.md Historical)
 
 ### 9.2 Cat companion (Lumi)
 
@@ -526,24 +501,25 @@ actor.call_deferred("snap_to_floor")   # or actor.setup(slot, feet) for companio
 - Horizontal motion from the nav motor in `companion.gd`; vertical motion from physics (not manual Y raycasts)
 - `cat.glb` mesh under `Visual/Model`; editor floor snap via raycast (place X/Z only in area scenes)
 
-**Follow vs autonomous (M3 extension — see `companion logic.md`)**
+**Follow vs autonomous (see `docs/companion-brain.md`)**
 
-Shipping behaviour is **follow-only** via `CompanionLogic`. Autonomous roam/sit/meow will use a companion-centric brain (not player idle detection); design and phased plan are in **`companion logic.md`** at the repo root.
+Shipping behaviour: **nav follow** plus **`CompanionBrain`** when the player is settled and the cat is within leash (`COMPANION_BRAIN_ENABLED`, default true). Follow / catch-up always wins when the player moves or the cat strays. Do not gate on the player FSM.
 
 | Mode | Status | Logic |
 |---|---|---|
 | **Follow** | Shipped | `NavigationAgent3D` motor in `companion.gd` — path to a fanned point behind the player (grid `CompanionLogic` fallback) |
-| **Roam / activities / meow** | Planned (Phase 1+) | `CompanionBrain` — blend follow with companion-owned urges |
+| **Roam / activities / meow** | Shipped (tier override) | `CompanionBrain` — wander / circle / sit / groom; meow via `Events.companion_barked` |
+| **Idle anim clips / blended weights** | Open (polish) | Clips pending in `cat.glb`; optional roam blend + RVO later |
 
-Autonomous activities (planned — timer/urge state machine in `core/companion/`):
+Autonomous activities (as-built in `core/companion/`):
 
-- **Wander** — random clear cell near player (`COMPANION_WANDER_RADIUS`), A* path
-- **Sit / play / groom** — hold position; play named clip when present in `cat.glb`
+- **Wander / circle** — POIs near the player within `COMPANION_WANDER_RADIUS` / `COMPANION_CIRCLE_*`
+- **Sit / groom** — hold position; play named clip when present in `cat.glb`
 - **Meow** — random interval (`COMPANION_MEOW_*`); `Events.companion_barked` → speech bubble (`ui/companion_bark.tscn`)
 
 Animation names are tunables in `config.gd` (`COMPANION_ANIM_SIT`, etc.). Only `walk` exists in the GLB today; idle clips are placeholders until art lands.
 
-**Scene wiring:** `scenes/companion/companion.gd` delegates to `CompanionLogic`, drives `AnimationPlayer`. Bark UI (`ui/companion_bark.tscn`) listens via `Events` — wired when brain Phase 2 lands.
+**Scene wiring:** `scenes/companion/companion.gd` runs brain → nav (or grid) motor → `CompanionVisual` / `AnimationPlayer`. Bark UI listens via `Events`.
 
 ### 9.3 NPC interaction
 
@@ -661,7 +637,7 @@ All UI in `CanvasLayer`. UI logic scripts must not manipulate 3D scene directly.
 
 Build in order. Each milestone = playable build.
 
-**Status note**: several M6 items were completed early during the playground migration (GDQuest player, debug HUD, grounded companion). **M5 remains the next milestone** — do not start remaining M6 items until M5's checklist is complete and its exit criteria pass. This section is the single source of truth for milestone status; `README.md` and `AGENTS.md` must point here rather than duplicate it.
+**Status note**: several M6 items were completed early during the playground migration (GDQuest player, debug HUD, grounded companion). **M5 remains the next milestone** — do not start remaining M6 checklist items until M5’s checklist is complete and its exit criteria pass. M3 brain/meow is shipped; leftover M3 boxes (anim clips, optional blend) are polish only and must not expand into new systems without approval. This section is the single source of truth for milestone status; `README.md` and `AGENTS.md` must point here rather than duplicate checklists.
 
 ### M1: Window + 3D area + camera
 
@@ -747,11 +723,12 @@ Materials: `StandardMaterial3D` with `shading_mode = SHADING_MODE_UNSHADED` or m
 
 Coding standards, workflow, and definition of done live in **`AGENTS.md`** — read it first. Project-specific notes:
 
-1. **Implement milestones in order** per §13. Official next: **M5** (area transitions). **M3 companion autonomy** may proceed in parallel — core logic in `core/companion/`, scene wiring in `scenes/companion/`.
+1. **Official next milestone: M5** (area transitions). Implement §13 checklists in order. **Exception:** leftover M3 polish listed in §13 / `docs/companion-brain.md` (idle anim clips, optional blend) may proceed only as small scoped fixes — do not start remaining M6 items, and do not expand companion scope, without Igor’s approval.
 2. **Match 2D prototype feel** for companion follow pacing — reference `reference/whiskerbound-2d-prototype` when tuning. Player movement is governed by GDQuest reference physics (§4, §9.1), not grid wall-slide.
 3. **No pixel art, no voxels, no free-orbit camera changes** beyond what the reference orbit camera provides.
 4. **After each milestone**: update §13 checkboxes and the Status header, update `README.md` status line, run `bash scripts/run_smoke_test.sh`, commit as `M5: area transitions with fade`.
 5. Target: Godot 4.7, macOS Apple Silicon, 60 FPS on placeholder assets.
+6. **Historical plans** live under `docs/archive/` — do not treat them as TODO lists.
 
 ### Verification (M1)
 

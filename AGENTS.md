@@ -1,6 +1,8 @@
 # Whiskerbound — Agent Instructions
 
-Read order: this file → `PROJECT.md` (architecture; **§13 is the single source of truth for milestone status**) → the code you are about to touch. Do not trust milestone status stated anywhere else, including old commits or this file's history.
+Read order: this file → `PROJECT.md` (architecture; **§13 is the single source of truth for milestone status**) → the code you are about to touch. Do not trust milestone status stated anywhere else, including old commits, archived plans under `docs/archive/`, or this file's history.
+
+For most tasks, prefer these PROJECT.md sections: **§4** (collision/nav), **§6.1** (core/ layering), **§9** (systems), **§13** (milestones). Companion brain live status: `docs/companion-brain.md`.
 
 ## Role: senior engineer and mentor
 
@@ -16,7 +18,7 @@ Igor is a beginner learning Godot. Therefore:
 ## Hard rules
 
 - Godot 4.7, GDScript only. No C#, no GDExtension.
-- Implement milestones **in order** per `PROJECT.md` §13. Do not start later-milestone work early without approval.
+- **Official next milestone: M5** (area transitions) per `PROJECT.md` §13. Implement milestones in order. **Exception:** leftover M3 polish in §13 / `docs/companion-brain.md` (idle anim clips, optional blend) may be small scoped fixes only — do not start remaining M6 items or expand companion scope without approval.
 - **Collision model** (`PROJECT.md` §4): player/NPC/companion blocking uses **3D `CharacterBody3D` physics** (GDQuest reference player for the protagonist; `GroundedCharacter` for companion; reference `NPCBody` for playground NPCs). Companion locomotion in the playground is **`NavigationAgent3D` on a baked `NavigationRegion3D`**; the 2D `CollisionGrid` is for minimap, debug, tests, and companion pathfinding only as the navmesh fallback (e.g. `village_green`) — never player wall collision. Do not revert actors to grid-sampled Y or `Node3D` roots.
 - **`core/` layering** (full rules in `PROJECT.md` §6.1): no autoload references, no scene-tree lookups outside own children, no `res://` scene paths. Pure-logic scripts must not extend `Node`. Sole Node-base exception: `core/world/grounded_character.gd`.
 - **Signals up, calls down.** Parents may call children; children signal upward. Cross-scene communication via `Events` autoload. Never `get_parent().do_thing()` or `get_node("../../X")`.
@@ -79,7 +81,15 @@ Mechanic and level specs come from the narrative designer. Before implementing: 
 ## Reference
 
 - **Architecture & collision:** `PROJECT.md` §4 (dual-layer model), §9.0 (`GroundedCharacter`), §9.1 (GDQuest player), §9.3 (NPC interaction)
+- **Companion brain:** `docs/companion-brain.md` (live); `docs/archive/` is historical only
 - 2D prototype (companion/pathfinding algorithms only, not player collision): `reference/whiskerbound-2d-prototype` locally, https://github.com/Ig0rFB/whiskerbound-2d-prototype
-- **Player controller:** `reference/untitled-game/` — copied to `scenes/player/gdquest/`; adapt only via `scenes/player/whiskerbound_player.gd`. Do not edit gdquest scripts in place. Jeheno addon (`addons/JehenoThirdPersonController/`) is legacy and unused at runtime.
-- **Playground:** `scenes/areas/playground.tscn` (not the Jeheno test map).
+- **Player controller:** `reference/untitled-game/` — copied to `scenes/player/gdquest/`; adapt only via `scenes/player/whiskerbound_player.gd`. Do not edit gdquest scripts in place.
+- **Playground:** `scenes/areas/playground.tscn`
 - **LSP / global classes:** run `godot --headless --import` after adding `class_name` scripts. Commit new `*.gd.uid` files and `.godot/global_script_class_cache.cfg`. Do **not** add `class_name` to autoload scripts — it shadows the singleton and breaks calls like `GameSettings.load()`.
+
+### Historical / do not revive
+
+- `addons/JehenoThirdPersonController/` — unused at runtime (prototype textures only)
+- `scenes/player/tpc_player.gd` — legacy adapter
+- Fixed OOTS `camera_rig.tscn` — editor preview only; gameplay uses GDQuest orbit camera
+- Grid feet-sampling as **player** wall collision — replaced by 3D physics (§4)

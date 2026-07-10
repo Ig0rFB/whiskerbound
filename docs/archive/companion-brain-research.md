@@ -1,10 +1,13 @@
 # Companion logic — design plan (Whiskerbound / Lumi)
 
-**Status:** Planning document — March 2026  
+> **ARCHIVED — RESEARCH.** Phase 1 (brain + meow on nav motor) is **shipped**.
+> Do not implement from this file. Live status: `docs/companion-brain.md`. As-built: `PROJECT.md` §9.2 / §13.
+
+**Status:** Historical research (March–July 2026)  
 **Author:** Igor + agent (research-backed)  
 **Goal:** Give companions their own continuous “thinking” loop — roaming, idling, and vocalising — **while always respecting follow** as the highest-priority locomotion need. This replaces the failed approach of branching follow vs autonomous based on **player idle/walk state**.
 
-> **Update (July 2026):** the **Motor** layer is now realised as a `NavigationAgent3D` follow on a baked `NavigationRegion3D` (see `PROJECT.md` §4 / §9.2 and `companion-navigation-plan.md`). The brain phases below build on that nav motor; where this doc says `CompanionLogic` "follow motor", read it as the **grid fallback**. The follow goal is already a fanned point behind the player, so the brain adds **roam/activity/vocalise** on top of the nav follow rather than replacing it.
+> **Update (July 2026):** the **Motor** layer is now realised as a `NavigationAgent3D` follow on a baked `NavigationRegion3D` (see `PROJECT.md` §4 / §9.2 and `docs/archive/companion-navigation-plan.md`). The brain phases below build on that nav motor; where this doc says `CompanionLogic` "follow motor", read it as the **grid fallback**. The follow goal is already a fanned point behind the player, so the brain adds **roam/activity/vocalise** on top of the nav follow rather than replacing it.
 
 ---
 
@@ -290,6 +293,4 @@ Landed on the `NavigationAgent3D` motor (not grid `CompanionLogic`):
 
 ## 9. Next action for Igor
 
-1. Read this doc on the go.
-2. When ready to implement Phase 1, say “implement companion brain Phase 1” — we touch only the files listed in §5, brain **off** by default.
-3. Do **not** merge follow/roam with player idle detection again.
+~~Superseded.~~ Phase 1 shipped with `COMPANION_BRAIN_ENABLED` default **true**. See `docs/companion-brain.md` for remaining open items. Do **not** merge follow/roam with player idle detection again.
